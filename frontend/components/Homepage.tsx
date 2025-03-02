@@ -30,10 +30,10 @@ function Homepage() {
       TruthOracle
     </Heading>
     <Box width="70%" className="font-jbm text-2xl mb-2">
-    Predict the Future, Own the Outcome
+    Forecast the Future, Reap the Profits
     </Box>
     <Box width="70%" className="font-jbm text-l">
-    Secure, Transparent, and Low-Fee Prediction Market on Aptos – Where Collective Intelligence Meets Rewards
+    Safe, Clear, and Cost-Effective on Aptos – Powering Rewards with Community Insight 
     </Box>
 
     <Link to="/marketplace"><button
