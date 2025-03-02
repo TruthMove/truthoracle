@@ -56,8 +56,10 @@ export function Header() {
   return (
     <div style={{ backgroundColor:"#1C2526", display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', color:"white", borderBottom: '1px solid gray'}}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <img src="/logonobg.png" alt="Logo" width={40} height={40} />
-        <Link to="/" style={{ zIndex:1}}><h1 className="font-jbm text-xl">TruthOracle</h1></Link>
+        <img src="/logonobg.svg" alt="Logo" width={40} height={40} style={{ marginRight: '10px' }} />
+        <Link to="/" style={{ zIndex: 1 }}>
+          <h1 className="font-jbm text-xl">TruthOracle</h1>
+        </Link>
       </div>
       <div style={{ display: 'flex', justifyContent:"flex-end", width:"70%"}}>
         <Link to="/marketplace" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Marketplace</Link>

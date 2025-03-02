@@ -57,7 +57,7 @@ function App() {
                 //       {/* Right Column */}
                 //       <div className="flex justify-center items-center">
                 //         <img
-                //           src="/logonobg.png"
+                //           src="/logonobg.svg"
                 //           className="w-64 h-64 md:w-80 md:h-80 object-contain transform transition duration-500 ease-in-out hover:scale-105"
                 //           alt="Logo"
                 //         />
