@@ -12,8 +12,8 @@ function App() {
   return (
     <Router>
       <Header />
-      <div style={{backgroundColor:"#111214"}} className="flex flex-col"> {/* Ensure the content stretches the full height */}
-        <main style={{backgroundColor:"#111214"}} className=" flex flex-col items-center px-4 pt-8">  {/* Main content area */}
+      <div style={{backgroundColor:"#1C2526"}} className="flex flex-col"> {/* Ensure the content stretches the full height */}
+        <main style={{backgroundColor:"#1C2526"}} className=" flex flex-col items-center px-4 pt-8">  {/* Main content area */}
           <Routes>
             <Route path="/faq" element={<FAQ />} />
             <Route path="/marketplace" element={<Marketplace/>} />
