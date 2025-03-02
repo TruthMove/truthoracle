@@ -51,6 +51,6 @@ aptos move publish
 ```
 
 ## Our deployments
-Testnet: [0x5b8a641ee62188ada65e594147d05d3dff597e6402d2359286512d71a1ffc491](https://explorer.aptoslabs.com/account/0x5b8a641ee62188ada65e594147d05d3dff597e6402d2359286512d71a1ffc491?network=testnet)
+Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 
 Front-end: [https://truth-oracle.vercel.app/](https://truth-oracle.vercel.app/)
