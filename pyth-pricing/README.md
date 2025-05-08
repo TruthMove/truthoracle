@@ -55,8 +55,8 @@ aptos-pyth-pricing/
    # Generate a new key
    aptos key generate --output-file ~/.aptos/key.json
    
-   # Create a profile for mainnet
-   aptos init --profile mainnet --network mainnet
+   # Create a profile for testnet
+   aptos init --profile testnet --network testnet
    ```
 
 4. Build and test:
