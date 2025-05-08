@@ -13,7 +13,7 @@
  *
  * Requirements:
  * - An Aptos API key (get one from https://aptoslabs.com/developers)
- * - Set the API key in environment variable APTOS_API_KEY_MAINNET
+ * - Set the API key in environment variable APTOS_API_KEY_TESTNET
  * - Bun runtime (for bun:sqlite)
  */
 
@@ -62,14 +62,14 @@ db.exec(`pragma journal_mode = WAL`);
 
 for await (const event of streamAndPersistTransactions({
   db,
-  url: "grpc.mainnet.aptoslabs.com:443",
-  apiKey: process.env.APTOS_API_KEY_MAINNET!,
+  url: "grpc.testnet.aptoslabs.com:443",
+  apiKey: process.env.APTOS_API_KEY_TESTNET!,
 })) {
   switch (event.type) {
     case "data": {
-      if (event.chainId !== 1n) {
+      if (event.chainId !== 2n) {
         throw new Error(
-          `Transaction stream returned a chainId of ${event.chainId}, but expected mainnet chainId=1`
+          `Transaction stream returned a chainId of ${event.chainId}, but expected testnet chainId=2`
         );
       }
 

@@ -20,8 +20,8 @@ import { streamTransactions } from "aptos-indexer";
 
 // Stream transactions from version 0
 for await (const event of streamTransactions({
-  url: "grpc.mainnet.aptoslabs.com:443",
-  apiKey: process.env.APTOS_API_KEY_MAINNET!,
+  url: "grpc.testnet.aptoslabs.com:443",
+  apiKey: process.env.APTOS_API_KEY_TESTNET!,
   startingVersion: 0n,
 })) {
   switch (event.type) {
