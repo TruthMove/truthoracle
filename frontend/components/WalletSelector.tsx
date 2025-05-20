@@ -58,7 +58,6 @@ export function WalletSelector() {
   const { account, disconnect, connected, wallets } = useWallet();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [accountEvents, setAccountEvents] = useState<AccountEvent[]>([]);
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [events, setEvents] = useState<any[]>([]);
 
