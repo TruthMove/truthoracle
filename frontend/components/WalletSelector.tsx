@@ -27,6 +27,25 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { getAccountAPTBalance } from "@/view-functions/getAccountBalance";
 import { useQuery } from "@tanstack/react-query";
+import Pusher from 'pusher-js';
+
+// Initialize Pusher with error handling
+let pusher: Pusher | null = null;
+try {
+  const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY || "5c9c8369bdc5cdcb8b7c";
+  const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "ap2";
+
+  if (!pusherKey || !pusherCluster) {
+    console.error('Pusher credentials not found in environment variables');
+  } else {
+    pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster,
+      enabledTransports: ['ws', 'wss']
+    });
+  }
+} catch (error) {
+  console.error('Error initializing Pusher:', error);
+}
 
 interface AccountEvent {
   version: number;
@@ -41,6 +60,7 @@ export function WalletSelector() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [accountEvents, setAccountEvents] = useState<AccountEvent[]>([]);
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [events, setEvents] = useState<any[]>([]);
 
   const { data: balanceData } = useQuery({
     queryKey: ["apt-balance", account?.address],
@@ -63,89 +83,73 @@ export function WalletSelector() {
   });
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
-    let reconnectTimeout: NodeJS.Timeout;
-    let reconnectAttempts = 0;
-    const MAX_RECONNECT_ATTEMPTS = 5;
-    const RECONNECT_DELAY = 5000;
-
-    const connectWebSocket = () => {
-      if (ws) {
-        ws.close();
-      }
-
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
-      ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('Connected to WebSocket server');
+    if (connected && account && pusher) {
+      // Check initial connection state
+      if (pusher.connection.state === 'connected') {
         setWsStatus('connected');
-        reconnectAttempts = 0;
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        setWsStatus('disconnected');
-        
-        // Attempt to reconnect
-        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-          reconnectAttempts++;
-          console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
-          reconnectTimeout = setTimeout(connectWebSocket, RECONNECT_DELAY);
-        } else {
-          console.error('Max reconnection attempts reached');
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setWsStatus('disconnected');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          switch (data.type) {
-            case 'connection_status':
-              console.log('Connection status:', data.status);
-              setWsStatus(data.status === 'connected' ? 'connected' : 'disconnected');
-              break;
-            case 'account_event':
-              // Add new event to the beginning of the array
-              setAccountEvents(prev => [data.data, ...prev].slice(0, 10)); // Keep last 10 events
-              break;
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-    };
-
-    // Connect to WebSocket when component mounts
-    connectWebSocket();
-
-    // Cleanup on unmount
-    return () => {
-      if (ws) {
-        ws.close();
+      } else {
+        setWsStatus('connecting');
       }
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-      }
-    };
-  }, []); // Empty dependency array means this effect runs once on mount
+      
+      // Subscribe to the channel
+      const channel = pusher.subscribe('account-events');
+
+      // Listen for account events
+      channel.bind('account-event', (data: any) => {
+        console.log('Received event:', data);
+        setEvents(prev => [data, ...prev].slice(0, 10)); // Keep last 10 events
+      });
+
+      // Handle connection state changes
+      pusher.connection.bind('state_change', (states: any) => {
+        console.log('Pusher connection state changed:', states);
+        if (states.current === 'connected') {
+          setWsStatus('connected');
+        } else if (states.current === 'disconnected' || states.current === 'failed') {
+          setWsStatus('disconnected');
+        } else if (states.current === 'connecting') {
+          setWsStatus('connecting');
+        }
+      });
+
+      // Handle connection success
+      pusher.connection.bind('connected', () => {
+        console.log('Pusher connected');
+        setWsStatus('connected');
+      });
+
+      // Handle errors
+      pusher.connection.bind('error', (err: any) => {
+        console.error('Pusher connection error:', err);
+        setWsStatus('disconnected');
+      });
+
+      // Handle disconnection
+      pusher.connection.bind('disconnected', () => {
+        console.log('Disconnected from Pusher');
+        setWsStatus('disconnected');
+      });
+
+      // Cleanup on unmount
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+        setWsStatus('disconnected');
+      };
+    }
+  }, [connected, account]);
 
   const formatEvent = (event: AccountEvent) => {
     const date = new Date(event.timestamp * 1000);
     const timeString = date.toLocaleTimeString();
+    const moduleAddress = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace";
     
     switch (event.event_type) {
-      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::MarketCreated`:
+      case `${moduleAddress}::truthoracle::MarketCreated`:
         return `${timeString} - Created market: ${event.event_data.market_id}`;
-      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::buy_shares`:
+      case `${moduleAddress}::truthoracle::buy_shares`:
         return `${timeString} - Bought shares: ${event.event_data.amount} for market ${event.event_data.market_id}`;
-      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::withdraw_payout`:
+      case `${moduleAddress}::truthoracle::withdraw_payout`:
         return `${timeString} - Withdrew payout: ${event.event_data.amount} from market ${event.event_data.market_id}`;
       default:
         return `${timeString} - ${event.event_type}`;
@@ -200,10 +204,10 @@ export function WalletSelector() {
             </span>
           </div>
           <div className="max-h-32 overflow-y-auto">
-            {accountEvents.length > 0 ? (
-              accountEvents.map((event, index) => (
+            {events.length > 0 ? (
+              events.map((event, index) => (
                 <p key={index} className="text-sm text-muted-foreground py-1 border-b last:border-0">
-                  {formatEvent(event)}
+                  {formatEvent(event.data)}
                 </p>
               ))
             ) : (
