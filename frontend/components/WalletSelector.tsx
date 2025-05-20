@@ -11,7 +11,7 @@ import {
   truncateAddress,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, ExternalLink } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 // Internal components
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ interface AccountEvent {
 }
 
 export function WalletSelector() {
-  const { account, connect, disconnect, connected, wallets } = useWallet();
+  const { account, disconnect, connected, wallets } = useWallet();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [accountEvents, setAccountEvents] = useState<AccountEvent[]>([]);
@@ -153,23 +153,6 @@ export function WalletSelector() {
   };
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
-
-  const copyAddress = useCallback(async () => {
-    if (!account?.address) return;
-    try {
-      await navigator.clipboard.writeText(account.address);
-      toast({
-        title: "Success",
-        description: "Copied wallet address to clipboard.",
-      });
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to copy wallet address.",
-      });
-    }
-  }, [account?.address, toast]);
 
   return connected ? (
     <DropdownMenu>
