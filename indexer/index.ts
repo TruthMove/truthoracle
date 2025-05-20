@@ -12,7 +12,7 @@ export async function* streamTransactions(opts: {
     opts.url,
     ChannelCredentials.createSsl(),
     {
-      "grpc.keepalive_time_ms": 1000,
+      "grpc.keepalive_time_ms": 2000,
       // 0 - No compression
       // 1 - Compress with DEFLATE algorithm
       // 2 - Compress with GZIP algorithm

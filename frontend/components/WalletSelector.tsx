@@ -11,8 +11,8 @@ import {
   truncateAddress,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
-import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User } from "lucide-react";
-import { useCallback, useState } from "react";
+import { ArrowLeft, ArrowRight, ChevronDown, Copy, LogOut, User, ExternalLink } from "lucide-react";
+import { useCallback, useState, useEffect } from "react";
 // Internal components
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -21,14 +21,136 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
+import { getAccountAPTBalance } from "@/view-functions/getAccountBalance";
+import { useQuery } from "@tanstack/react-query";
+
+interface AccountEvent {
+  version: number;
+  event_type: string;
+  event_data: any;
+  timestamp: number;
+}
 
 export function WalletSelector() {
-  const { account, connected, disconnect, wallet } = useWallet();
+  const { account, connect, disconnect, connected, wallets } = useWallet();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [accountEvents, setAccountEvents] = useState<AccountEvent[]>([]);
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+
+  const { data: balanceData } = useQuery({
+    queryKey: ["apt-balance", account?.address],
+    refetchInterval: 10_000,
+    queryFn: async () => {
+      if (!account?.address) return { balance: 0 };
+      try {
+        const balance = await getAccountAPTBalance({ accountAddress: account.address });
+        return { balance };
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+        return { balance: 0 };
+      }
+    },
+    enabled: !!account?.address,
+  });
+
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    const RECONNECT_DELAY = 5000;
+
+    const connectWebSocket = () => {
+      if (ws) {
+        ws.close();
+      }
+
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('Connected to WebSocket server');
+        setWsStatus('connected');
+        reconnectAttempts = 0;
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setWsStatus('disconnected');
+        
+        // Attempt to reconnect
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttempts++;
+          console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
+          reconnectTimeout = setTimeout(connectWebSocket, RECONNECT_DELAY);
+        } else {
+          console.error('Max reconnection attempts reached');
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setWsStatus('disconnected');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'connection_status':
+              console.log('Connection status:', data.status);
+              setWsStatus(data.status === 'connected' ? 'connected' : 'disconnected');
+              break;
+            case 'account_event':
+              // Add new event to the beginning of the array
+              setAccountEvents(prev => [data.data, ...prev].slice(0, 10)); // Keep last 10 events
+              break;
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+    };
+
+    // Connect to WebSocket when component mounts
+    connectWebSocket();
+
+    // Cleanup on unmount
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    };
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  const formatEvent = (event: AccountEvent) => {
+    const date = new Date(event.timestamp * 1000);
+    const timeString = date.toLocaleTimeString();
+    
+    switch (event.event_type) {
+      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::MarketCreated`:
+        return `${timeString} - Created market: ${event.event_data.market_id}`;
+      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::buy_shares`:
+        return `${timeString} - Bought shares: ${event.event_data.amount} for market ${event.event_data.market_id}`;
+      case `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::truthoracle::withdraw_payout`:
+        return `${timeString} - Withdrew payout: ${event.event_data.amount} from market ${event.event_data.market_id}`;
+      default:
+        return `${timeString} - ${event.event_type}`;
+    }
+  };
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
@@ -54,17 +176,59 @@ export function WalletSelector() {
       <DropdownMenuTrigger asChild>
         <Button>{account?.ansName || truncateAddress(account?.address) || "Unknown"}</Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={copyAddress} className="gap-2">
+      <DropdownMenuContent align="end" className="w-80">
+        <div className="px-4 py-2">
+          <p className="text-sm font-medium">Balance</p>
+          <p className="text-2xl font-bold">
+            {balanceData?.balance ? (balanceData.balance / Math.pow(10, 8)).toFixed(4) : "0"} APT
+          </p>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={disconnect}>
+          Disconnect
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => {
+          navigator.clipboard.writeText(account?.address || '');
+          toast({
+            title: "Address copied",
+            description: "Your wallet address has been copied to clipboard",
+          });
+        }} className="flex gap-2">
           <Copy className="h-4 w-4" /> Copy address
         </DropdownMenuItem>
-        {wallet && isAptosConnectWallet(wallet) && (
+        {wallets?.find((wallet) => isAptosConnectWallet(wallet)) && (
           <DropdownMenuItem asChild>
             <a href={APTOS_CONNECT_ACCOUNT_URL} target="_blank" rel="noopener noreferrer" className="flex gap-2">
-              <User className="h-4 w-4" /> Account
+              <ExternalLink className="h-4 w-4" /> View on Explorer
             </a>
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium">Recent Activity</p>
+            <span className={`text-xs px-2 py-1 rounded ${
+              wsStatus === 'connected' ? 'bg-green-100 text-green-800' :
+              wsStatus === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+              {wsStatus}
+            </span>
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            {accountEvents.length > 0 ? (
+              accountEvents.map((event, index) => (
+                <p key={index} className="text-sm text-muted-foreground py-1 border-b last:border-0">
+                  {formatEvent(event)}
+                </p>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No recent activity</p>
+            )}
+          </div>
+        </div>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={disconnect} className="gap-2">
           <LogOut className="h-4 w-4" /> Disconnect
         </DropdownMenuItem>
