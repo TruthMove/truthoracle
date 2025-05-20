@@ -1,74 +1,81 @@
-# Aptos-Pyth Oracle Integration
+# Pyth Price Verification
 
-Using Pyth oracle prices in Aptos smart contracts.
-
-## Project Structure
-
-```
-aptos-pyth-pricing/
-├── move/                 # Core implementation
-│   ├── staking/         # Oracle and commission contracts
-│   │   ├── Move.toml
-│   │   ├── sources/     # Contract source files
-│   │   └── tests/       # Contract test files
-│   ├── pyth/            # Pyth Network integration
-│   │   ├── Move.toml
-│   │   └── sources/     # Pyth interface implementations
-│   └── test.sh          # Automated test script for all modules
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
-## Core Components
-
-1. **Pyth Integration (`move/pyth/`)**
-   - Price feed data structures
-   - Price feed ID handling
-   - Core Pyth Network interface
-
-2. **Staking Module (`move/staking/`)**
-   - Price oracle implementation
-   - Commission contract logic
-   - Unit and integration tests
-
+A Move module for verifying Pyth Network price feeds on Aptos. This module provides a simple interface to fetch and validate price data from Pyth's oracle network.
 
 ## Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/aptos-pyth-pricing.git
-   cd aptos-pyth-pricing
-   ```
+```move
+use pyth::price_verification;
 
-2. Install dependencies:
-   ```bash
-   # Install Aptos CLI
-   brew install aptos
-   
-   # Verify installation
-   aptos --version
-   ```
+// Fetch and verify a price feed
+let verified_price = price_verification::verify_price(price_feed_id, 120); // 120 seconds max age
+let price = price_verification::get_verified_price(&verified_price);
+```
 
-3. Set up your development environment:
-   ```bash
-   # Generate a new key
-   aptos key generate --output-file ~/.aptos/key.json
-   
-   # Create a profile for testnet
-   aptos init --profile testnet --network testnet
-   ```
+## Features
 
-4. Build and test:
-   ```bash
-   # Compile the modules
-   aptos move compile --package-dir move/staking/
-   aptos move compile --package-dir move/pyth/
+- **Price Freshness**: Ensures price data is recent (default: 2 minutes)
+- **Confidence Checks**: Validates price confidence levels
+- **Custom Thresholds**: Configure max age and confidence requirements
+- **Type Safety**: Strongly typed price data structures
 
-   # Run tests (Option 1: Individual modules)
-   aptos move test --package-dir move/staking/
-   aptos move test --package-dir move/pyth/
+## Usage
 
-   # Run tests (Option 2: All modules using test script)
-   cd move && ./test.sh
-   ```
+### Basic Price Verification
+
+```move
+// Verify price with default settings
+let verified = price_verification::verify_price(price_feed_id, 120);
+```
+
+### Custom Confidence Threshold
+
+```move
+// Verify with custom confidence level
+let verified = price_verification::verify_price_with_confidence(
+    price_feed_id,
+    120,  // max age in seconds
+    200   // min confidence (2%)
+);
+```
+
+### Accessing Price Data
+
+```move
+let price = price_verification::get_verified_price(&verified);
+let confidence = price_verification::get_verified_confidence(&verified);
+let timestamp = price_verification::get_verified_timestamp(&verified);
+```
+
+## Error Codes
+
+- `EPRICE_TOO_OLD`: Price data exceeds maximum age
+- `EPRICE_INVALID`: Invalid price data
+- `ECONFIDENCE_TOO_LOW`: Price confidence below threshold
+
+## Integration with Prediction Markets
+
+This module is designed to work seamlessly with prediction markets. Example:
+
+```move
+// In your market creation function
+let verified_price = price_verification::verify_price(price_feed_id, 120);
+let price = price_verification::get_verified_price(&verified_price);
+
+// Use price for market initialization
+init_market(question, price, ...);
+```
+
+## Development
+
+### Building
+
+```bash
+aptos move compile
+```
+
+### Testing
+
+```bash
+aptos move test
+```
