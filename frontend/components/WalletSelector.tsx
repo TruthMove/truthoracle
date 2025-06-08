@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { getAccountAPTBalance } from "@/view-functions/getAccountBalance";
+import { getAccountAPTBalance, getPrimaryFungibleAssetBalance } from "@/view-functions/getAccountBalance";
 import { useQuery } from "@tanstack/react-query";
 import Pusher from 'pusher-js';
 
@@ -68,6 +68,31 @@ export function WalletSelector() {
       if (!account?.address) return { balance: 0 };
       try {
         const balance = await getAccountAPTBalance({ accountAddress: account.address });
+        return { balance };
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+        return { balance: 0 };
+      }
+    },
+    enabled: !!account?.address,
+  });
+
+  const PLATFORM_USDC_METADATA_ADDRESS = "0x8ceb5c13ad3dee6fc7445f323150b6cb02a9240064a66557af9e8e469a7e06fd";
+
+  const { data: usdcBalanceData } = useQuery({
+    queryKey: ["usdc-balance", account?.address],
+    refetchInterval: 10_000,
+    queryFn: async () => {
+      if (!account?.address) return { balance: 0 };
+      try {
+        const balance = await getPrimaryFungibleAssetBalance({
+          accountAddress: account.address,
+          faMetadataAddress: PLATFORM_USDC_METADATA_ADDRESS,
+        });
         return { balance };
       } catch (error: any) {
         toast({
@@ -167,6 +192,10 @@ export function WalletSelector() {
           <p className="text-sm font-medium">Balance</p>
           <p className="text-2xl font-bold">
             {balanceData?.balance ? (balanceData.balance / Math.pow(10, 8)).toFixed(4) : "0"} APT
+          </p>
+          <p className="text-sm font-medium mt-2">Platform USDC Balance</p>
+          <p className="text-2xl font-bold">
+            {usdcBalanceData?.balance ? (usdcBalanceData.balance / Math.pow(10, 8)).toFixed(2) : "0"} USDC
           </p>
         </div>
         <DropdownMenuSeparator />

@@ -65,6 +65,38 @@ To initialize the truthoracle module, run:
 aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::init_module --profile default
 ```
 
+7. Initialize the incentives Module
+
+To initialize the incentives module, run:
+```sh
+aptos move run \
+  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::incentives::initialize \
+  --profile default
+```
+
+## Resolving a Market (Single-Admin Method)
+
+To resolve a market directly as the admin, use the following command:
+
+**Generic Command:**
+```sh
+aptos move run \
+  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::record_result \
+  --profile <admin-profile> \
+  --args u64:<market_id> u8:<result>
+```
+- Replace `<admin-profile>` with your Aptos CLI profile name (e.g., `default`).
+- Replace `<market_id>` with the market ID you want to resolve.
+- Replace `<result>` with the result value (e.g., `0` for option 1, `1` for option 2).
+
+**Example Command:**
+```sh
+aptos move run \
+  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::record_result \
+  --profile default \
+  --args u64:5 u8:0
+```
+This resolves market ID 5 with result 0 (option 1) using the `default` profile.
 
 ## Our deployments
 
