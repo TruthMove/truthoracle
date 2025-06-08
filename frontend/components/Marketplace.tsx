@@ -95,7 +95,7 @@ useEffect(() => {
   return (
     <>
     {!bets && <div>"Loading..."</div>}
-    {bets && <div style={{ minHeight: "100vh" }} className="font-jbm">
+    {bets && <div style={{ maxHeight: "100vh" }} className="font-jbm">
       <Grid
         mt={5}
         templateColumns={{

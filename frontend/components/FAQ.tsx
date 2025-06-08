@@ -78,7 +78,7 @@ const faqData: FAQItemProps[] = [
 
 const FAQ = () => {
   return (
-    <div style={{ minHeight: "100vh" }} className="max-w-2xl mx-auto p-4 font-jbm text-white" color={"brand.secondary"}>
+    <div style={{ maxHeight: "100vh", paddingTop: "60px" }} className="max-w-2xl mx-auto p-4 font-jbm text-white" color={"brand.secondary"}>
       <h1 className="text-2xl font-jbm mb-4">Frequently Asked Questions</h1>
       {faqData.map((item, index) => (
         <FAQItem key={index} question={item.question} answer={item.answer} />

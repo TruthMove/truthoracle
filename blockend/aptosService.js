@@ -67,3 +67,72 @@ export async function getUserMarketData(userAddress) {
     console.error(e);
   }
 }
+
+export async function getUserRewards(userAddress) {
+    try {
+        const payload = {
+            function: `${moduleAddress}::incentives::get_user_rewards`,
+            functionArguments: [userAddress],
+        };
+
+        const rewards = await aptos.view({ payload });
+        return rewards;
+    } catch (e) {
+        console.error(e);
+        return [0, 0];
+    }
+}
+
+export async function claimRewards(account, marketId) {
+    try {
+        const payload = {
+            type: "entry_function_payload",
+            function: `${moduleAddress}::incentives::claim_rewards`,
+            type_arguments: [],
+            arguments: [marketId],
+        };
+
+        const transaction = await aptosClient.generateTransaction(account.address, payload);
+        const signedTransaction = await account.signTransaction(transaction);
+        const response = await aptosClient.submitTransaction(signedTransaction);
+
+        return response;
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+}
+
+export async function claimAllRewards(account) {
+    try {
+        const payload = {
+            type: "entry_function_payload",
+            function: `${moduleAddress}::incentives::claim_all_rewards`,
+            type_arguments: [],
+            arguments: [],
+        };
+
+        const transaction = await aptosClient.generateTransaction(account.address, payload);
+        const signedTransaction = await account.signTransaction(transaction);
+        const response = await aptosClient.submitTransaction(signedTransaction);
+
+        return response;
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+}
+
+export async function getClaimedMarkets(userAddress) {
+    try {
+        const payload = {
+            function: `${moduleAddress}::incentives::get_claimed_markets`,
+            functionArguments: [userAddress],
+        };
+        const claimedMarkets = await aptos.view({ payload });
+        return claimedMarkets;
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}

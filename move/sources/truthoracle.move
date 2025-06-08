@@ -12,6 +12,7 @@ module message_board_addr::truthoracle{
   use std::option::{Self, Option};
   use std::event;
   use message_board_addr::usdc;
+  use message_board_addr::incentives;
 
   // Constants
   // status 
@@ -192,6 +193,9 @@ module message_board_addr::truthoracle{
     // Get Price
     let price = update_shares(user, market_id, option, shares);
     usdc::transfer(user, market_address, price);    
+
+    // Record early participant for incentives
+    incentives::record_early_participant(market_id, signer::address_of(user), price);
   }
 
   public entry fun record_result(
@@ -220,6 +224,11 @@ module message_board_addr::truthoracle{
     prediction_market_metadata.status = FINISHED;
     prediction_market_metadata.result = option::some<u8>(result);
     prediction_market_metadata.payout_per_share = option::some<u64>(payout_per_share);
+
+    // Allow users to claim their rewards
+    let market_to_creator = borrow_global<MarketToCreator>(@message_board_addr);
+    let creator = table::borrow(&market_to_creator.market_to_creator, market_id);
+    incentives::record_market_creator(market_id, *creator);
   }
 
   public entry fun withdraw_payout(
@@ -320,6 +329,9 @@ module message_board_addr::truthoracle{
 
     // Increment the counter
     *counter = *counter + 1;
+
+    // Record market creator for incentives
+    incentives::record_market_creator(*counter, signer_address);
   } 
 
   // Internal Fn

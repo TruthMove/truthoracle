@@ -6,14 +6,32 @@ import Homepage from "./components/Homepage";
 import Portfolio from "./components/Portfolio";
 import Admin from "./components/Admin/Admin";
 import BetDetails from './components/BetDetails';
+import Rewards from './components/Rewards';
 
 function App() {
 
   return (
     <Router>
       <Header />
-      <div style={{backgroundColor:"#1C2526"}} className="flex flex-col"> {/* Ensure the content stretches the full height */}
-        <main style={{backgroundColor:"#1C2526"}} className=" flex flex-col items-center px-4 pt-8">  {/* Main content area */}
+      <div
+        style={{
+          backgroundColor: "#1C2526",
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+        className="flex flex-col"
+      >
+        <main
+          style={{
+            backgroundColor: "#1C2526",
+            paddingTop: "64px", // header height
+            flex: 1,
+            overflowY: "auto",
+          }}
+          className="flex flex-col items-center px-4"
+        >
           <Routes>
             <Route path="/faq" element={<FAQ />} />
             <Route path="/marketplace" element={<Marketplace/>} />
@@ -26,6 +44,7 @@ function App() {
             <Route path="/portfolio/:address" element={<Portfolio/>} />
             <Route path="/bet/:id" element={<BetDetails />} /> 
             <Route path="/admin" element={<Admin/>} />
+            <Route path="/rewards" element={<Rewards/>} />
             {/* <Route path="/market/:address" element={<Market/>} /> */}
 
 

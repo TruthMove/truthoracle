@@ -54,7 +54,24 @@ export function Header() {
 
 
   return (
-    <div style={{ backgroundColor:"#1C2526", display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', color:"white", borderBottom: '1px solid gray'}}>
+    <div
+      className="header-sticky"
+      style={{
+        backgroundColor: "#1C2526",
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px',
+        color: "white",
+        borderBottom: '1px solid gray',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '64px',
+        width: '100%',
+        zIndex: 1000
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <img src="/logonobg.svg" alt="Logo" width={40} height={40} style={{ marginRight: '10px' }} />
         <Link to="/" style={{ zIndex: 1 }}>
@@ -64,6 +81,7 @@ export function Header() {
       <div style={{ display: 'flex', justifyContent:"flex-end", width:"70%"}}>
         <Link to="/marketplace" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Marketplace</Link>
         <Link to={`/portfolio/${account?.address}`}  style={{marginRight:"40px", zIndex:1}} className="font-jbm text-l">Portfolio</Link>
+        <Link to="/rewards" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Rewards</Link>
         <Link to="/faq" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>FAQ's</Link>
         <Link to="/admin" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Create Market</Link>
                 <Button onClick={handleClick} style={{zIndex:1, borderRadius:"20px", "height":"30px"}}>Mint USDC</Button>

@@ -162,7 +162,7 @@ export function WalletSelector() {
       <DropdownMenuTrigger asChild>
         <Button>{account?.ansName || truncateAddress(account?.address) || "Unknown"}</Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80" style={{ zIndex: 1101 }}>
         <div className="px-4 py-2">
           <p className="text-sm font-medium">Balance</p>
           <p className="text-2xl font-bold">

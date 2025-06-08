@@ -6,7 +6,7 @@ type Props = {}
 function Admin({}: Props) {
   return (
     <>
-    <Box minHeight={"100vh"} width={"100%"} pt={20} px={20}>
+    <Box maxHeight={"100vh"} width={"100%"} pt={20} px={20}>
         {/* <h1>Admin</h1> */}
         {/* <p>Voting Functionality</p> */}
         {/* <Flex> */}
