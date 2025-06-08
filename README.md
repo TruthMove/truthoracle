@@ -51,6 +51,20 @@ Replace the address in files
 ```
 aptos move publish
 ```
+5. Mint Mock USDC
+
+To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
+```sh
+aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::usdc::mint --profile default --args address:0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1 u64:50000000000
+```
+
+6. Initialize the truthoracle Module
+
+To initialize the truthoracle module, run:
+```sh
+aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::init_module --profile default
+```
+
 
 ## Our deployments
 
