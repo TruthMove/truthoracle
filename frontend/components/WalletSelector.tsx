@@ -25,7 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { getAccountAPTBalance, getPrimaryFungibleAssetBalance } from "@/view-functions/getAccountBalance";
+import { getAccountAPTBalance } from "@/view-functions/getAccountBalance";
+import { getPlatformUSDCBalance } from "../../blockend/aptosService";
 import { useQuery } from "@tanstack/react-query";
 import Pusher from 'pusher-js';
 
@@ -81,18 +82,13 @@ export function WalletSelector() {
     enabled: !!account?.address,
   });
 
-  const PLATFORM_USDC_METADATA_ADDRESS = "0x8ceb5c13ad3dee6fc7445f323150b6cb02a9240064a66557af9e8e469a7e06fd";
-
   const { data: usdcBalanceData } = useQuery({
     queryKey: ["usdc-balance", account?.address],
     refetchInterval: 10_000,
     queryFn: async () => {
       if (!account?.address) return { balance: 0 };
       try {
-        const balance = await getPrimaryFungibleAssetBalance({
-          accountAddress: account.address,
-          faMetadataAddress: PLATFORM_USDC_METADATA_ADDRESS,
-        });
+        const balance = await getPlatformUSDCBalance(account.address);
         return { balance };
       } catch (error: any) {
         toast({

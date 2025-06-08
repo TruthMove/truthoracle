@@ -24,26 +24,3 @@ export const getAccountAPTBalance = async (args: AccountAPTBalanceArguments): Pr
     return 0;
   }
 };
-
-export const getPrimaryFungibleAssetBalance = async ({
-  accountAddress,
-  faMetadataAddress,
-}: {
-  accountAddress: string;
-  faMetadataAddress: string;
-}): Promise<number> => {
-  try {
-    const response = await aptosClient().view<[string]>({
-      payload: {
-        function: "0x1::primary_fungible_store::balance",
-        typeArguments: ["0x1::object::ObjectCore"],
-        functionArguments: [accountAddress, faMetadataAddress],
-      },
-    });
-    console.log("Balance:", response);
-    return parseInt(response[0], 10);
-  } catch (error) {
-    console.error("Error fetching primary fungible asset balance:", error);
-    return 0;
-  }
-};

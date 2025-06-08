@@ -9,6 +9,7 @@ export const config = new AptosConfig({ network: "mainnet" });
 export const aptos = new Aptos(config);
 
 const moduleAddress = "0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1";
+
 export async function initMarket(adminAccount, question, option1, option2, sharesPerOption) {
   const adminAddress = adminAccount;
   const payload = {
@@ -134,5 +135,20 @@ export async function getClaimedMarkets(userAddress) {
     } catch (e) {
         console.error(e);
         return [];
+    }
+}
+
+export async function getPlatformUSDCBalance(accountAddress) {
+    try {
+        const payload = {
+            function: `${moduleAddress}::usdc::get_balance`,
+            functionArguments: [accountAddress],
+        };
+        const [balance] = await aptos.view({ payload });
+        console.log({ balance });
+        return parseInt(balance, 10);
+    } catch (e) {
+        console.error("Error fetching platform USDC balance:", e);
+        return 0;
     }
 }

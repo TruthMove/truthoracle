@@ -27,6 +27,7 @@ module message_board_addr::incentives {
         market_to_creator_rewards: Table<u64, bool>,
         user_to_claimed_rewards: Table<address, Table<u64, bool>>,
         user_to_eligible_markets: Table<address, vector<u64>>,
+        user_to_claimed_market_ids: Table<address, vector<u64>>,
         total_rewards_distributed: u64
     }
 
@@ -56,6 +57,7 @@ module message_board_addr::incentives {
             market_to_creator_rewards: table::new(),
             user_to_claimed_rewards: table::new(),
             user_to_eligible_markets: table::new(),
+            user_to_claimed_market_ids: table::new(),
             total_rewards_distributed: 0
         });
     }
@@ -152,22 +154,38 @@ module message_board_addr::incentives {
                 reward_type: 0
             });
         };
+
+        // After successful claim, track claimed market id
+        if (!table::contains(&incentive_data.user_to_claimed_market_ids, user_addr)) {
+            table::add(&mut incentive_data.user_to_claimed_market_ids, user_addr, vector::empty());
+        };
+        let claimed_markets = table::borrow_mut(&mut incentive_data.user_to_claimed_market_ids, user_addr);
+        vector::push_back(claimed_markets, market_id);
     }
 
     // Claim all rewards for a user
     public entry fun claim_all_rewards(user: &signer) acquires IncentiveData, UserRewards, ObjectController {
         let user_addr = signer::address_of(user);
-        let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
+        let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
         if (!table::contains(&incentive_data.user_to_eligible_markets, user_addr)) {
             return;
         };
-        let eligible_markets = table::borrow(&incentive_data.user_to_eligible_markets, user_addr);
-        let n = vector::length(eligible_markets);
+        let eligible_markets_ref = table::borrow(&incentive_data.user_to_eligible_markets, user_addr);
+        let n = vector::length(eligible_markets_ref);
+        let market_ids = vector::empty<u64>();
         let i = 0;
         while (i < n) {
-            let market_id = *vector::borrow(eligible_markets, i);
-            claim_rewards(user, market_id);
+            let market_id = *vector::borrow(eligible_markets_ref, i);
+            vector::push_back(&mut market_ids, market_id);
             i = i + 1;
+        };
+        // Now, no more outstanding references to incentive_data
+        let m = vector::length(&market_ids);
+        let j = 0;
+        while (j < m) {
+            let market_id = *vector::borrow(&market_ids, j);
+            claim_rewards(user, market_id);
+            j = j + 1;
         };
     }
 
@@ -190,19 +208,9 @@ module message_board_addr::incentives {
     #[view]
     public fun get_claimed_markets(user: address): vector<u64> acquires IncentiveData {
         let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
-        let mut claimed: vector<u64> = vector::empty();
-        if (!table::contains(&incentive_data.user_to_claimed_rewards, user)) {
-            return claimed;
+        if (!table::contains(&incentive_data.user_to_claimed_market_ids, user)) {
+            return vector::empty<u64>();
         };
-        let claimed_table = table::borrow(&incentive_data.user_to_claimed_rewards, user);
-        let keys = table::keys(claimed_table);
-        let n = vector::length(keys);
-        let i = 0;
-        while (i < n) {
-            let market_id = *vector::borrow(keys, i);
-            vector::push_back(&mut claimed, market_id);
-            i = i + 1;
-        };
-        claimed
+        *table::borrow(&incentive_data.user_to_claimed_market_ids, user)
     }
 } 
