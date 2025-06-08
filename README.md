@@ -55,14 +55,14 @@ aptos move publish
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
-aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::usdc::mint --profile default --args address:0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1 u64:50000000000
+aptos move run --function-id 0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d::usdc::mint --profile default --args address:0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d u64:50000000000
 ```
 
 6. Initialize the truthoracle Module
 
 To initialize the truthoracle module, run:
 ```sh
-aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::init_module --profile default
+aptos move run --function-id 0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d::truthoracle::init_module --profile default
 ```
 
 7. Initialize the incentives Module
@@ -70,7 +70,7 @@ aptos move run --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c95
 To initialize the incentives module, run:
 ```sh
 aptos move run \
-  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::incentives::initialize \
+  --function-id 0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d::incentives::initialize \
   --profile default
 ```
 
@@ -81,7 +81,7 @@ To resolve a market directly as the admin, use the following command:
 **Generic Command:**
 ```sh
 aptos move run \
-  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::record_result \
+  --function-id 0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d::truthoracle::record_result \
   --profile <admin-profile> \
   --args u64:<market_id> u8:<result>
 ```
@@ -92,7 +92,7 @@ aptos move run \
 **Example Command:**
 ```sh
 aptos move run \
-  --function-id 0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1::truthoracle::record_result \
+  --function-id 0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d::truthoracle::record_result \
   --profile default \
   --args u64:5 u8:0
 ```
@@ -100,7 +100,7 @@ This resolves market ID 5 with result 0 (option 1) using the `default` profile.
 
 ## Our deployments
 
-Mainnet: [0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1](https://explorer.aptoslabs.com/account/0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1?network=mainnet)
+Mainnet: [0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d](https://explorer.aptoslabs.com/account/0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d?network=mainnet)
 
 Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 
