@@ -16,8 +16,8 @@ module message_board_addr::usdc{
   const ASSET_NAME: vector<u8> = b"USD Coin";
   const ASSET_SYMBOL: vector<u8> = b"USDC";
   const DECIMALS: u8 = 8;
-  const FAVICON: vector<u8> = b"http://example.com/favicon.ico";
-  const PROJECT: vector<u8> = b"http://example.com";
+  const FAVICON: vector<u8> = b"https://truth-oracle.vercel.app/logonobg.svg";
+  const PROJECT: vector<u8> = b"https://truth-oracle.vercel.app";
 
   // Structs
   #[resource_group_member(group = aptos_framework::object::ObjectGroup)]

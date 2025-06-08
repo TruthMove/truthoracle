@@ -12,10 +12,6 @@ module message_board_addr::truthoracle{
   use std::option::{Self, Option};
   use std::event;
   use message_board_addr::usdc;
-  use pyth::price;
-  use pyth::price_identifier;
-  use pyth::pyth;
-  use aptos_framework::zk_snark;
 
   // Constants
   // status 
@@ -39,17 +35,6 @@ module message_board_addr::truthoracle{
   const ENO_WINNING_SHARES: u64 = 8;
   const EINVALID_NO_SHARES: u64 = 9;
   const EINVALID_LIQUIDITY_PARAM: u64 = 9;
-
-  const PRECISION: u128 = 100000000; // 1e8
-  const MAX_PRICE_AGE_SECS: u64 = 120; // 2 minutes
-
-  // Add price feed IDs for different assets
-  const PYTH_BTC_ID: vector<u8> = x"ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
-  const PYTH_ETH_ID: vector<u8> = x"ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72d7bfd33d6d7";
-
-  // Add ZK proof verification constants
-  const ZK_PROOF_VERIFICATION_FAILED: u64 = 10;
-  const ZK_PROOF_INVALID: u64 = 11;
 
   // Structs
   #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
@@ -104,20 +89,6 @@ module message_board_addr::truthoracle{
     option_shares_2: u64,
     amount_invested: u64,
     profit_made: u64
-  }
-
-  struct OracleVerification has store {
-    price_feed_id: vector<u8>,
-    price: u128,
-    confidence: u64,
-    timestamp: u64,
-    zk_proof: vector<u8>
-  }
-
-  // Add ZK proof verification struct
-  struct ZKProofVerification has store {
-    proof: vector<u8>,
-    public_inputs: vector<u8>
   }
 
   #[event]
@@ -483,86 +454,6 @@ module message_board_addr::truthoracle{
     let logx = sub(log2_64(raw_value), create_from_rational(64, 1));
     let lnx = mul_div(logx, ln2, one);
     lnx
-  }
-
-  // New function for oracle verification
-  public fun verify_oracle_with_zk(
-    price_feed_id: vector<u8>,
-    zk_proof: vector<u8>
-  ): bool {
-    // Get price from Pyth
-    let price_data = pyth::get_price_no_older_than(
-      price_identifier::from_byte_vec(price_feed_id),
-      MAX_PRICE_AGE_SECS
-    );
-    
-    let current_price = price::get_price(&price_data);
-    let confidence = price::get_conf(&price_data);
-    let timestamp = price::get_timestamp(&price_data);
-
-    // Verify ZK proof
-    verify_zk_proof(
-      price_feed_id,
-      current_price,
-      confidence,
-      timestamp,
-      zk_proof
-    )
-  }
-
-  // Update verify_zk_proof function to use Noir
-  fun verify_zk_proof(
-    price_feed_id: vector<u8>,
-    price: u128,
-    confidence: u64,
-    timestamp: u64,
-    proof: vector<u8>
-  ): bool {
-    // Prepare public inputs for the Noir circuit
-    let public_inputs = vector::empty<u8>();
-    
-    // Add price feed ID
-    vector::append(&mut public_inputs, price_feed_id);
-    
-    // Add price (as 32 bytes)
-    let price_bytes = u128_to_bytes(price);
-    vector::append(&mut public_inputs, price_bytes);
-    
-    // Add confidence (as 8 bytes)
-    let confidence_bytes = u64_to_bytes(confidence);
-    vector::append(&mut public_inputs, confidence_bytes);
-    
-    // Add timestamp (as 8 bytes)
-    let timestamp_bytes = u64_to_bytes(timestamp);
-    vector::append(&mut public_inputs, timestamp_bytes);
-
-    // Verify the ZK proof using Aptos's native ZK verification
-    zk_snark::verify_proof(
-        proof,
-        public_inputs,
-        @oracle_verification // The address where your Noir circuit is deployed
-    )
-  }
-
-  // Helper functions for byte conversion
-  fun u128_to_bytes(value: u128): vector<u8> {
-    let bytes = vector::empty<u8>();
-    let i = 16;
-    while (i > 0) {
-        i = i - 1;
-        vector::push_back(&mut bytes, (((value >> (i * 8)) & 0xFF) as u8));
-    };
-    bytes
-  }
-
-  fun u64_to_bytes(value: u64): vector<u8> {
-    let bytes = vector::empty<u8>();
-    let i = 8;
-    while (i > 0) {
-        i = i - 1;
-        vector::push_back(&mut bytes, (((value >> (i * 8)) & 0xFF) as u8));
-    };
-    bytes
   }
 
   #[test_only]

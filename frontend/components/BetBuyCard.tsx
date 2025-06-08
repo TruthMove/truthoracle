@@ -88,10 +88,10 @@ useEffect(() => {
         return { val1: val_1 / (val_1 + val_2), val2: val_2 / (val_1 + val_2) } 
     }
 
-  const moduleAddress = "0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace";
+  const moduleAddress = "0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1";
     const {  signAndSubmitTransaction } = useWallet();
 
-    const config = new AptosConfig({ network: Network.TESTNET });
+    const config = new AptosConfig({ network: Network.MAINNET });
     const aptos = new Aptos(config);
 
   const buyShares = async(marketId:any, shareOption:any, numberOfShares:any) => {
@@ -193,7 +193,7 @@ useEffect(() => {
             <h2 style={{color: "#CCCCFF"}} className="text-md font-jbm font-bold">About the Logarithmic Market Scoring Rule</h2>
             <Text fontSize={"sm"} mb={20} className="font-jbm">
                 The Logarithmic Market Scoring Rule (LMSR) is a mathematical tool used to evaluate the accuracy of predictions. 
-                It’s designed to encourage honesty and precision when making predictions about uncertain events.
+                It's designed to encourage honesty and precision when making predictions about uncertain events.
 
             
 

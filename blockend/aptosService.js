@@ -5,10 +5,10 @@ import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Network } from "aptos";
 
-export const config = new AptosConfig({ network: "testnet" });
+export const config = new AptosConfig({ network: "mainnet" });
 export const aptos = new Aptos(config);
 
-const moduleAddress = "0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace";
+const moduleAddress = "0x3651671085d6b9bbb9bcf2c5c97d92dea6504fac33afe8c955c3af3da0d687a1";
 export async function initMarket(adminAccount, question, option1, option2, sharesPerOption) {
   const adminAddress = adminAccount;
   const payload = {
