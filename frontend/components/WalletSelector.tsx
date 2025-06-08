@@ -195,7 +195,7 @@ export function WalletSelector() {
           </p>
           <p className="text-sm font-medium mt-2">Platform USDC Balance</p>
           <p className="text-2xl font-bold">
-            {usdcBalanceData?.balance ? (usdcBalanceData.balance / Math.pow(10, 8)).toFixed(2) : "0"} USDC
+            {usdcBalanceData?.balance ? (usdcBalanceData.balance / Math.pow(10, 8)).toFixed(2) : "0"} USD Coin
           </p>
         </div>
         <DropdownMenuSeparator />
