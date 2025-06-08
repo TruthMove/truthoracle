@@ -16,7 +16,7 @@ module message_board_addr::usdc{
   const ASSET_NAME: vector<u8> = b"USD Coin";
   const ASSET_SYMBOL: vector<u8> = b"USDC";
   const DECIMALS: u8 = 8;
-  const FAVICON: vector<u8> = b"https://truth-oracle.vercel.app/logonobg.svg";
+  const FAVICON: vector<u8> = b"https://res.cloudinary.com/sachinapi/image/upload/v1749376323/wht4tgvghfgm0ibcq1pa.ico";
   const PROJECT: vector<u8> = b"https://truth-oracle.vercel.app";
 
   // Structs
