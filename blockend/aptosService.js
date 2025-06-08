@@ -35,7 +35,6 @@ export async function getMarketCount() {
 
     const marketCount = await aptos.view({ payload });
     return marketCount;
-    console.log("marketCount: ", marketCount);
   } catch (e) {
     console.error(e);
   }
@@ -145,7 +144,6 @@ export async function getPlatformUSDCBalance(accountAddress) {
             functionArguments: [accountAddress],
         };
         const [balance] = await aptos.view({ payload });
-        console.log({ balance });
         return parseInt(balance, 10);
     } catch (e) {
         console.error("Error fetching platform USDC balance:", e);
