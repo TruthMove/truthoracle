@@ -519,7 +519,7 @@ module message_board_addr::truthoracle{
     let raw_value = get_raw_value(x);
     let scaled_part = (raw_value * eight_decimals) >> 64;
     if (scaled_part > 0) {
-      scaled_part
+      (scaled_part as u64)
     } else {
       0
     }
