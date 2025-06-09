@@ -162,7 +162,7 @@ const Rewards = () => {
                             <Text color="#E0E0E0">No rewards have been claimed yet.</Text>
                         ) : (
                             <VStack align="stretch" spacing={2}>
-                                <Text color="#E0E0E0">You have claimed rewards from {claimedMarkets.length} markets:</Text>
+                                <Text color="#E0E0E0">You are eligible for rewards from {claimedMarkets.length} markets:</Text>
                                 <Box 
                                     p={2} 
                                     bg="#1A1F21" 
