@@ -56,8 +56,33 @@ aptos move publish
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
-aptos move run --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::mint --profile default --args address:0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71 u64:50000000000
+aptos move run --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::mint --profile default --args address:0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71 u64:100000000000
 ```
+
+6. **Mint USDC to the object address**
+
+   To mint USDC for contract rewards, you need the USDC object address. You can get this by calling the `get_metadata` view function from the USDC module:
+
+   ```sh
+   aptos move view --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::get_metadata
+   ```
+
+   The output will look like:
+   ```json
+   {
+     "Result": [
+       { "inner": "0x70a4e7793f9d3e7cc45363c9b4682c118bd40b04f4899363f5221ba2e4e91176" }
+     ]
+   }
+   ```
+   The value in the `"inner"` field is the object address you should mint USDC to.
+
+   Now mint USDC to this address:
+   ```sh
+   aptos move run --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::mint --profile default --args address:<OBJECT_ADDRESS> u64:100000000000
+   # Example:
+   # aptos move run --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::mint --profile default --args address:0x70a4e7793f9d3e7cc45363c9b4682c118bd40b04f4899363f5221ba2e4e91176 u64:100000000000
+   ```
 
 ## Resolving a Market (Single-Admin Method)
 
