@@ -142,6 +142,33 @@ module message_board_addr::incentives {
         vector::push_back(eligible_markets, market_id);
     }
 
+    // Record winning prediction
+    public entry fun record_winning_prediction(
+        market_id: u64,
+        user: address
+    ) acquires IncentiveData {
+        let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
+        
+        // Track eligible markets for user
+        if (!table::contains(&incentive_data.user_to_eligible_markets, user)) {
+            table::add(&mut incentive_data.user_to_eligible_markets, user, vector::empty());
+        };
+        let eligible_markets = table::borrow_mut(&mut incentive_data.user_to_eligible_markets, user);
+        
+        // Check for duplicate market
+        let j = 0;
+        let n = vector::length(eligible_markets);
+        while (j < n) {
+            if (*vector::borrow(eligible_markets, j) == market_id) {
+                return // Exit if already eligible
+            };
+            j = j + 1;
+        };
+        
+        // Add market if not found
+        vector::push_back(eligible_markets, market_id);
+    }
+
     // Claim rewards for a market
     public entry fun claim_rewards(
         user: &signer,
@@ -197,6 +224,21 @@ module message_board_addr::incentives {
                 reward_type = if (reward_type == 255) 1 else reward_type; // If not already set by early
                 *table::borrow_mut(&mut incentive_data.market_to_creator_rewards, market_id) = true;
             }
+        };
+
+        // Check winning prediction reward
+        if (table::contains(&incentive_data.user_to_eligible_markets, user_addr)) {
+            let eligible_markets = table::borrow(&incentive_data.user_to_eligible_markets, user_addr);
+            let i = 0;
+            let len = vector::length(eligible_markets);
+            while (i < len) {
+                if (*vector::borrow(eligible_markets, i) == market_id) {
+                    total_reward = total_reward + WINNING_PREDICTION_BONUS;
+                    reward_type = if (reward_type == 255) 2 else reward_type; // If not already set by early/creator
+                    break;
+                };
+                i = i + 1;
+            };
         };
 
         // Transfer rewards if any

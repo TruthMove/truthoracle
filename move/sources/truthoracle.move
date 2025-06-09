@@ -83,6 +83,7 @@ module message_board_addr::truthoracle{
   // user shares
   struct UserData has key {
     market_to_data: Table<u64, UserMarketData>,
+    market_to_participants: Table<u64, vector<address>>,
   }
 
   struct UserMarketData has store, copy, drop {
@@ -176,7 +177,7 @@ module message_board_addr::truthoracle{
     market_id: u64,
     option: u8,
     shares: u64,
-  ) acquires MarketCounter, PredictionMarketMetaData, LMSR, UserData, MarketToCreator {
+  ) acquires MarketCounter, PredictionMarketMetaData, LMSR, UserData, MarketToCreator, ObjectController {
     // Check shares provided
     assert!(shares != 0, EINVALID_NO_SHARES);
 
@@ -198,13 +199,42 @@ module message_board_addr::truthoracle{
 
     // Record early participant for incentives
     incentives::record_early_participant(market_id, signer::address_of(user), price);
+
+    // Track participant in market
+    if (!exists<UserData>(market_address)) {
+        move_to(&object::generate_signer_for_extending(&borrow_global<ObjectController>(market_address).extend_ref), UserData {
+            market_to_data: table::new(),
+            market_to_participants: table::new(),
+        });
+    };
+    let user_data = borrow_global_mut<UserData>(market_address);
+    
+    // Add user to participants list if not already present
+    if (!table::contains(&user_data.market_to_participants, market_id)) {
+        table::add(&mut user_data.market_to_participants, market_id, vector::empty());
+    };
+    let participants = table::borrow_mut(&mut user_data.market_to_participants, market_id);
+    let user_addr = signer::address_of(user);
+    
+    // Check if user is already in participants list
+    let i = 0;
+    let len = vector::length(participants);
+    while (i < len) {
+        if (*vector::borrow(participants, i) == user_addr) {
+            return // Exit if already added
+        };
+        i = i + 1;
+    };
+    
+    // Add user to participants list
+    vector::push_back(participants, user_addr);
   }
 
   public entry fun record_result(
     _admin: &signer,
     market_id: u64,
     result: u8
-  ) acquires PredictionMarketMetaData, MarketCounter, LMSR, MarketToCreator {
+  ) acquires PredictionMarketMetaData, MarketCounter, LMSR, MarketToCreator, UserData {
     // -> Removed auth for demo
 
     // Check option provided
@@ -227,9 +257,41 @@ module message_board_addr::truthoracle{
     prediction_market_metadata.result = option::some<u8>(result);
     prediction_market_metadata.payout_per_share = option::some<u64>(payout_per_share);
 
-    // Allow users to claim their rewards
+    // Record winning predictions for incentives
     let market_to_creator = borrow_global<MarketToCreator>(@message_board_addr);
     let _creator = table::borrow(&market_to_creator.market_to_creator, market_id);
+    
+    // Get all users who have data for this market
+    let market_address = get_market_address(market_id);
+    
+    // Check if user data exists for this market
+    if (exists<UserData>(market_address)) {
+        let user_data = borrow_global<UserData>(market_address);
+        
+        // Get all participants for this market
+        if (table::contains(&user_data.market_to_participants, market_id)) {
+            let participants = table::borrow(&user_data.market_to_participants, market_id);
+            let i = 0;
+            let len = vector::length(participants);
+            
+            while (i < len) {
+                let user_addr = *vector::borrow(participants, i);
+                // For each participant, check their UserData resource
+                if (exists<UserData>(user_addr)) {
+                    let participant_data = borrow_global<UserData>(user_addr);
+                    if (table::contains(&participant_data.market_to_data, market_id)) {
+                        let user_market_data = table::borrow(&participant_data.market_to_data, market_id);
+                        let winning_shares = if (result == 0) user_market_data.option_shares_1 else user_market_data.option_shares_2;
+                        if (winning_shares > 0) {
+                            // Record winning prediction for incentives
+                            incentives::record_winning_prediction(market_id, user_addr);
+                        };
+                    };
+                };
+                i = i + 1;
+            }
+        };
+    };
   }
 
   public entry fun withdraw_payout(
@@ -409,6 +471,7 @@ module message_board_addr::truthoracle{
     if(!exists<UserData>(signer_address)) {
       move_to(user, UserData {
         market_to_data: table::new<u64, UserMarketData>(),
+        market_to_participants: table::new(),
       });
     };
 
