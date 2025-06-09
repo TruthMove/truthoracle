@@ -393,4 +393,84 @@ module message_board_addr::incentives {
         };
         *table::borrow(&incentive_data.user_to_claimed_market_ids, user)
     }
+
+    #[test_only]
+    public fun setup_incentives_test_env(admin: &signer, user: &signer) {
+        // Initialize incentives and mint USDC to the object address
+        initialize(admin);
+        let object_address = object::create_object_address(&@message_board_addr, b"USDC");
+        // Mint 1000 USDC to the object address for rewards
+        usdc::mint(admin, object_address, 100000000000);
+        // Mint 100 USDC to user for other operations
+        usdc::mint(admin, signer::address_of(user), 10000000000);
+    }
+
+    #[test(admin = @message_board_addr, user = @0xBEEF)]
+    public fun test_claim_early_participant_reward(admin: &signer, user: &signer) acquires IncentiveData, UserRewards, ObjectController {
+        setup_incentives_test_env(admin, user);
+        let market_id = 1;
+        // Simulate early participant
+        record_early_participant(market_id, signer::address_of(user), 100000000);
+        // User should have pending reward
+        let (pending, total_earned) = get_user_rewards(signer::address_of(user));
+        assert!(pending == EARLY_PARTICIPANT_REWARD, 101);
+        assert!(total_earned == 0, 102);
+        // Claim reward
+        claim_rewards(user, market_id);
+        let (pending2, total_earned2) = get_user_rewards(signer::address_of(user));
+        assert!(pending2 == 0, 103);
+        assert!(total_earned2 == EARLY_PARTICIPANT_REWARD, 104);
+    }
+
+    #[test(admin = @message_board_addr, user = @0xBEEF)]
+    public fun test_double_claim_prevention(admin: &signer, user: &signer) acquires IncentiveData, UserRewards, ObjectController {
+        setup_incentives_test_env(admin, user);
+        let market_id = 2;
+        record_early_participant(market_id, signer::address_of(user), 100000000);
+        claim_rewards(user, market_id);
+        // Second claim should abort
+        let aborted = aborts_when(|| claim_rewards(user, market_id));
+        assert!(aborted, 201);
+    }
+
+    #[test(admin = @message_board_addr, user = @0xBEEF)]
+    public fun test_no_reward_if_not_eligible(admin: &signer, user: &signer) acquires IncentiveData, UserRewards, ObjectController {
+        setup_incentives_test_env(admin, user);
+        let market_id = 3;
+        // User is not an early participant, creator, or winner
+        let (pending, total_earned) = get_user_rewards(signer::address_of(user));
+        assert!(pending == 0, 301);
+        assert!(total_earned == 0, 302);
+        // Claim should not transfer any reward
+        claim_rewards(user, market_id);
+        let (pending2, total_earned2) = get_user_rewards(signer::address_of(user));
+        assert!(pending2 == 0, 303);
+        assert!(total_earned2 == 0, 304);
+    }
+
+    #[test(admin = @message_board_addr, user = @0xBEEF)]
+    public fun test_market_creator_reward(admin: &signer, user: &signer) acquires IncentiveData, UserRewards, ObjectController {
+        setup_incentives_test_env(admin, user);
+        let market_id = 4;
+        record_market_creator(market_id, signer::address_of(user));
+        let (pending, total_earned) = get_user_rewards(signer::address_of(user));
+        assert!(pending == MARKET_CREATOR_REWARD, 401);
+        claim_rewards(user, market_id);
+        let (pending2, total_earned2) = get_user_rewards(signer::address_of(user));
+        assert!(pending2 == 0, 402);
+        assert!(total_earned2 == MARKET_CREATOR_REWARD, 403);
+    }
+
+    #[test(admin = @message_board_addr, user = @0xBEEF)]
+    public fun test_winning_prediction_reward(admin: &signer, user: &signer) acquires IncentiveData, UserRewards, ObjectController {
+        setup_incentives_test_env(admin, user);
+        let market_id = 5;
+        record_winning_prediction(market_id, signer::address_of(user));
+        let (pending, total_earned) = get_user_rewards(signer::address_of(user));
+        assert!(pending == WINNING_PREDICTION_BONUS, 501);
+        claim_rewards(user, market_id);
+        let (pending2, total_earned2) = get_user_rewards(signer::address_of(user));
+        assert!(pending2 == 0, 502);
+        assert!(total_earned2 == WINNING_PREDICTION_BONUS, 503);
+    }
 } 
