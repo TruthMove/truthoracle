@@ -279,6 +279,7 @@ module message_board_addr::truthoracle{
                     let user_data = borrow_global<UserData>(user_addr);
                     if (table::contains(&user_data.market_to_data, market_id)) {
                         let user_market_data = table::borrow(&user_data.market_to_data, market_id);
+                        // Check if user has shares in the winning option
                         let winning_shares = if (result == 0) user_market_data.option_shares_1 else user_market_data.option_shares_2;
                         if (winning_shares > 0) {
                             // Record winning prediction for incentives
@@ -515,8 +516,13 @@ module message_board_addr::truthoracle{
 
   fun round_to_8_decimals(x: FixedPoint64): u64{
     let eight_decimals = 100000000;
-    let scaled_part = (get_raw_value(x) * eight_decimals) >> 64;
-    (scaled_part as u64)
+    let raw_value = get_raw_value(x);
+    let scaled_part = (raw_value * eight_decimals) >> 64;
+    if (scaled_part > 0) {
+      scaled_part
+    } else {
+      0
+    }
   }
 
   fun ln(x: FixedPoint64):FixedPoint64 {

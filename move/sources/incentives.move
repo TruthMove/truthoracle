@@ -313,4 +313,14 @@ module message_board_addr::incentives {
         };
         *table::borrow(&incentive_data.user_to_eligible_markets, user)
     }
+
+    // View claimed markets for a user
+    #[view]
+    public fun get_claimed_markets(user: address): vector<u64> acquires IncentiveData {
+        let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
+        if (!table::contains(&incentive_data.user_to_claimed_market_ids, user)) {
+            return vector::empty<u64>();
+        };
+        *table::borrow(&incentive_data.user_to_claimed_market_ids, user)
+    }
 } 

@@ -1,18 +1,19 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Box, Button, Heading, Text, VStack, useToast, HStack, Spinner, IconButton } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { getUserRewards, getRewardMarkets } from "../../blockend/aptosService";
+import { getUserRewards, getRewardMarkets, getClaimedMarkets } from "../../blockend/aptosService";
 import { RepeatIcon } from "@chakra-ui/icons";
 import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 import { Network } from "aptos";
 
-const moduleAddress = "0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab";
+const moduleAddress = "0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281";
 const config = new AptosConfig({ network: Network.MAINNET });
 const aptos = new Aptos(config);
 
 const Rewards = () => {
     const { account, signAndSubmitTransaction } = useWallet();
     const [rewards, setRewards] = useState<{ pending: number; total: number }>({ pending: 0, total: 0 });
+    const [rewardMarkets, setRewardMarkets] = useState<number[]>([]);
     const [claimedMarkets, setClaimedMarkets] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -22,8 +23,10 @@ const Rewards = () => {
     const fetchRewardsAndClaims = async () => {
         if (account?.address) {
             try {
-                const [pending, total] = await getUserRewards(account.address);
+                const result = await getUserRewards(account.address);
+                const [pending, total] = result;
                 console.log({
+                    result,
                     pending,
                     total
                 });
@@ -31,10 +34,12 @@ const Rewards = () => {
                     pending: Number(pending) / 1e8, // Convert from base units to USDC
                     total: Number(total) / 1e8
                 });
-                const claimed = await getRewardMarkets(account.address);
-                setClaimedMarkets(claimed.map((id: any) => Number(id)));
+                const rewardMarkets = await getRewardMarkets(account.address);
+                setRewardMarkets(rewardMarkets[0].map((id: any) => Number(id)));
+                const claimedMarkets = await getClaimedMarkets(account.address);
+                setClaimedMarkets(claimedMarkets[0].map((id: any) => Number(id)));
             } catch (error) {
-                console.error("Error fetching rewards or claimed markets:", error);
+                console.error("Error fetching rewards markets:", error);
                 toast({
                     title: "Error",
                     description: "Failed to fetch rewards data. Please try again.",
@@ -155,14 +160,37 @@ const Rewards = () => {
                         {rewards.pending === 0 ? "No Rewards to Claim" : "Claim All Rewards"}
                     </Button>
 
-                    {/* Already Claimed Rewards Section */}
+                    {/* Eligible Markets Section */}
                     <Box p={4} borderWidth={1} borderRadius="lg" bg="#23292B">
-                        <Heading size="md" color="white" mb={3}>Claimed Rewards</Heading>
+                        <Heading size="md" color="white" mb={3}>Eligible Markets</Heading>
+                        {rewardMarkets.length === 0 ? (
+                            <Text color="#E0E0E0">No markets are currently eligible for rewards.</Text>
+                        ) : (
+                            <VStack align="stretch" spacing={2}>
+                                <Text color="#E0E0E0">You are eligible for rewards from {rewardMarkets.length} markets:</Text>
+                                <Box 
+                                    p={2} 
+                                    bg="#1A1F21" 
+                                    borderRadius="md" 
+                                    maxH="150px" 
+                                    overflowY="auto"
+                                >
+                                    <Text color="#E0E0E0" fontSize="sm">
+                                        Market IDs: {rewardMarkets.join(", ")}
+                                    </Text>
+                                </Box>
+                            </VStack>
+                        )}
+                    </Box>
+
+                    {/* Claimed Markets Section */}
+                    <Box p={4} borderWidth={1} borderRadius="lg" bg="#23292B">
+                        <Heading size="md" color="white" mb={3}>Claimed Markets</Heading>
                         {claimedMarkets.length === 0 ? (
                             <Text color="#E0E0E0">No rewards have been claimed yet.</Text>
                         ) : (
                             <VStack align="stretch" spacing={2}>
-                                <Text color="#E0E0E0">You are eligible for rewards from {claimedMarkets.length} markets:</Text>
+                                <Text color="#E0E0E0">You have claimed rewards from {claimedMarkets.length} markets:</Text>
                                 <Box 
                                     p={2} 
                                     bg="#1A1F21" 
