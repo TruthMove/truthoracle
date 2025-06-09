@@ -52,34 +52,7 @@ Replace the address in files
 aptos move publish
 ```
 
-5. Initialize the truthoracle Module (Mainnet)
-
-To initialize the truthoracle module on mainnet, run:
-```sh
-aptos move run \
---function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::truthoracle::init_module \
---profile default
-```
-
-6. Initialize the usdc Module (Mainnet)
-
-To initialize the usdc module on mainnet, run:
-```sh
-aptos move run \
---function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::usdc::init_module \
---profile default
-```
-
-7. Initialize the incentives Module
-
-To initialize the incentives module, run:
-```sh
-aptos move run \
-  --function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::incentives::initialize \
-  --profile default
-```
-
-8. Mint Mock USDC
+5. Mint Mock USDC
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
