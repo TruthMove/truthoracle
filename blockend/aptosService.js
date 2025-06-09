@@ -2,10 +2,9 @@
 
 import { aptosClient } from "@/utils/aptosClient";
 import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Network } from "aptos";
 
-export const config = new AptosConfig({ network: "mainnet" });
+export const config = new AptosConfig({ network: Network.MAINNET });
 export const aptos = new Aptos(config);
 
 const moduleAddress = "0x2a6c6b97583161fa7f130c062dd2216b882e35546a4b648f0e9769745397405e";
@@ -86,17 +85,16 @@ export async function getUserRewards(userAddress) {
 export async function claimRewards(account, marketId) {
     try {
         const payload = {
-            type: "entry_function_payload",
             function: `${moduleAddress}::incentives::claim_rewards`,
-            type_arguments: [],
-            arguments: [marketId],
+            typeArguments: [],
+            functionArguments: [marketId],
         };
 
-        const transaction = await aptosClient.generateTransaction(account.address, payload);
-        const signedTransaction = await account.signTransaction(transaction);
-        const response = await aptosClient.submitTransaction(signedTransaction);
-
-        return response;
+        const committedTxn = await account.signAndSubmitTransaction({ 
+            data: payload 
+        });
+        await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
+        return committedTxn;
     } catch (e) {
         console.error(e);
         throw e;
@@ -106,17 +104,16 @@ export async function claimRewards(account, marketId) {
 export async function claimAllRewards(account) {
     try {
         const payload = {
-            type: "entry_function_payload",
             function: `${moduleAddress}::incentives::claim_all_rewards`,
-            type_arguments: [],
-            arguments: [],
+            typeArguments: [],
+            functionArguments: [],
         };
 
-        const transaction = await aptosClient.generateTransaction(account.address, payload);
-        const signedTransaction = await account.signTransaction(transaction);
-        const response = await aptosClient.submitTransaction(signedTransaction);
-
-        return response;
+        const committedTxn = await account.signAndSubmitTransaction({ 
+            data: payload 
+        });
+        await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
+        return committedTxn;
     } catch (e) {
         console.error(e);
         throw e;
