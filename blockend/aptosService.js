@@ -7,7 +7,7 @@ import { Network } from "aptos";
 export const config = new AptosConfig({ network: Network.MAINNET });
 export const aptos = new Aptos(config);
 
-const moduleAddress = "0xfa6ed66dce26773ccd148343ac888c15716c23ecf9c9d6a7ad9e7cc54718e354";
+const moduleAddress = "0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262";
 
 export async function initMarket(adminAccount, question, option1, option2, sharesPerOption) {
   const adminAddress = adminAccount;
@@ -120,10 +120,10 @@ export async function claimAllRewards(account) {
     }
 }
 
-export async function getClaimedMarkets(userAddress) {
+export async function getRewardMarkets(userAddress) {
     try {
         const payload = {
-            function: `${moduleAddress}::incentives::get_claimed_markets`,
+            function: `${moduleAddress}::incentives::get_reward_markets`,
             functionArguments: [userAddress],
         };
         const claimedMarkets = await aptos.view({ payload });

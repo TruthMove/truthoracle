@@ -261,26 +261,24 @@ module message_board_addr::truthoracle{
     let market_to_creator = borrow_global<MarketToCreator>(@message_board_addr);
     let _creator = table::borrow(&market_to_creator.market_to_creator, market_id);
     
-    // Get all users who have data for this market
+    // Get market address
     let market_address = get_market_address(market_id);
     
-    // Check if user data exists for this market
+    // Get all participants for this market
     if (exists<UserData>(market_address)) {
-        let user_data = borrow_global<UserData>(market_address);
-        
-        // Get all participants for this market
-        if (table::contains(&user_data.market_to_participants, market_id)) {
-            let participants = table::borrow(&user_data.market_to_participants, market_id);
+        let market_user_data = borrow_global<UserData>(market_address);
+        if (table::contains(&market_user_data.market_to_participants, market_id)) {
+            let participants = table::borrow(&market_user_data.market_to_participants, market_id);
             let i = 0;
             let len = vector::length(participants);
             
             while (i < len) {
                 let user_addr = *vector::borrow(participants, i);
-                // For each participant, check their UserData resource
+                // Check if user has data and winning shares
                 if (exists<UserData>(user_addr)) {
-                    let participant_data = borrow_global<UserData>(user_addr);
-                    if (table::contains(&participant_data.market_to_data, market_id)) {
-                        let user_market_data = table::borrow(&participant_data.market_to_data, market_id);
+                    let user_data = borrow_global<UserData>(user_addr);
+                    if (table::contains(&user_data.market_to_data, market_id)) {
+                        let user_market_data = table::borrow(&user_data.market_to_data, market_id);
                         let winning_shares = if (result == 0) user_market_data.option_shares_1 else user_market_data.option_shares_2;
                         if (winning_shares > 0) {
                             // Record winning prediction for incentives

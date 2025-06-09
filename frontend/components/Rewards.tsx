@@ -1,12 +1,12 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Box, Button, Heading, Text, VStack, useToast, HStack, Spinner, IconButton } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { getUserRewards, getClaimedMarkets } from "../../blockend/aptosService";
+import { getUserRewards, getRewardMarkets } from "../../blockend/aptosService";
 import { RepeatIcon } from "@chakra-ui/icons";
 import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 import { Network } from "aptos";
 
-const moduleAddress = "0xfa6ed66dce26773ccd148343ac888c15716c23ecf9c9d6a7ad9e7cc54718e354";
+const moduleAddress = "0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262";
 const config = new AptosConfig({ network: Network.MAINNET });
 const aptos = new Aptos(config);
 
@@ -31,7 +31,7 @@ const Rewards = () => {
                     pending: Number(pending) / 1e8, // Convert from base units to USDC
                     total: Number(total) / 1e8
                 });
-                const claimed = await getClaimedMarkets(account.address);
+                const claimed = await getRewardMarkets(account.address);
                 setClaimedMarkets(claimed.map((id: any) => Number(id)));
             } catch (error) {
                 console.error("Error fetching rewards or claimed markets:", error);
