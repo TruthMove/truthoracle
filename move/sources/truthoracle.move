@@ -392,7 +392,7 @@ module message_board_addr::truthoracle{
     *counter = *counter + 1;
 
     // Record market creator for incentives
-    incentives::record_market_creator(*counter, signer_address);
+    incentives::record_market_creator(*counter - 1, signer_address);
   } 
 
   // Internal Fn

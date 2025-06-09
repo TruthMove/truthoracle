@@ -57,7 +57,7 @@ aptos move publish
 To initialize the truthoracle module on mainnet, run:
 ```sh
 aptos move run \
---function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::truthoracle::init_module \
+--function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::truthoracle::init_module \
 --profile default
 ```
 
@@ -66,7 +66,7 @@ aptos move run \
 To initialize the usdc module on mainnet, run:
 ```sh
 aptos move run \
---function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::usdc::init_module \
+--function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::usdc::init_module \
 --profile default
 ```
 
@@ -75,7 +75,7 @@ aptos move run \
 To initialize the incentives module, run:
 ```sh
 aptos move run \
-  --function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::incentives::initialize \
+  --function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::incentives::initialize \
   --profile default
 ```
 
@@ -83,7 +83,7 @@ aptos move run \
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
-aptos move run --function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::usdc::mint --profile default --args address:0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262 u64:50000000000
+aptos move run --function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::usdc::mint --profile default --args address:0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab u64:50000000000
 ```
 
 ## Resolving a Market (Single-Admin Method)
@@ -93,7 +93,7 @@ To resolve a market directly as the admin, use the following command:
 **Generic Command:**
 ```sh
 aptos move run \
-  --function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::truthoracle::record_result \
+  --function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::truthoracle::record_result \
   --profile <admin-profile> \
   --args u64:<market_id> u8:<result>
 ```
@@ -104,7 +104,7 @@ aptos move run \
 **Example Command:**
 ```sh
 aptos move run \
-  --function-id 0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262::truthoracle::record_result \
+  --function-id 0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab::truthoracle::record_result \
   --profile default \
   --args u64:5 u8:0
 ```
@@ -112,7 +112,7 @@ This resolves market ID 5 with result 0 (option 1) using the `default` profile.
 
 ## Our deployments
 
-Mainnet: [0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262](https://explorer.aptoslabs.com/account/0xb7d3763b821401656f0d23a8ff0ae4567b9f5f06973eafbc142f5e832405f262?network=mainnet)
+Mainnet: [0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab](https://explorer.aptoslabs.com/account/0x8aa68add43456010ea13743fb7fa51fe1983f8f5746340f8ca1ea9accd1472ab?network=mainnet)
 
 Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 
