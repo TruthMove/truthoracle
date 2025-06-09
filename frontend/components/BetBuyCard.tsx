@@ -88,7 +88,7 @@ useEffect(() => {
         return { val1: val_1 / (val_1 + val_2), val2: val_2 / (val_1 + val_2) } 
     }
 
-  const moduleAddress = "0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281";
+  const moduleAddress = "0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71";
     const {  signAndSubmitTransaction } = useWallet();
 
     const config = new AptosConfig({ network: Network.MAINNET });

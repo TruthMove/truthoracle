@@ -56,7 +56,7 @@ aptos move publish
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
-aptos move run --function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::usdc::mint --profile default --args address:0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281 u64:50000000000
+aptos move run --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::usdc::mint --profile default --args address:0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71 u64:50000000000
 ```
 
 ## Resolving a Market (Single-Admin Method)
@@ -66,7 +66,7 @@ To resolve a market directly as the admin, use the following command:
 **Generic Command:**
 ```sh
 aptos move run \
-  --function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::truthoracle::record_result \
+  --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::truthoracle::record_result \
   --profile <admin-profile> \
   --args u64:<market_id> u8:<result>
 ```
@@ -77,7 +77,7 @@ aptos move run \
 **Example Command:**
 ```sh
 aptos move run \
-  --function-id 0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281::truthoracle::record_result \
+  --function-id 0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71::truthoracle::record_result \
   --profile default \
   --args u64:5 u8:0
 ```
@@ -85,7 +85,7 @@ This resolves market ID 5 with result 0 (option 1) using the `default` profile.
 
 ## Our deployments
 
-Mainnet: [0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281](https://explorer.aptoslabs.com/account/0x3696815e695bf27c6bbf129630ebda6b49fb482aecb2b57e4cfd039aa2921281?network=mainnet)
+Mainnet: [0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71](https://explorer.aptoslabs.com/account/0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71?network=mainnet)
 
 Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 
