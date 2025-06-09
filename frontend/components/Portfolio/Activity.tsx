@@ -36,7 +36,7 @@ function Activity({}: Props) {
 
     const config = new AptosConfig({ network: Network.MAINNET });
     const aptos = new Aptos(config);
-    const moduleAddress = "0x5a650d6c0cc0327b3379cb91a2b3fa858c66a272c770a7c784734bfc3cc2999d";
+    const moduleAddress = "0x9ad719eeeaba8bca2c6e489caaee2723c8f071ff0ed31d31f41ea93adb5b1ceb";
 
 
      useEffect(() => {
