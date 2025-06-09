@@ -106,6 +106,8 @@ module message_board_addr::truthoracle{
     move_to(admin, MarketToCreator{
       market_to_creator: table::new<u64, address>()
     });
+    // Initialize incentives module
+    incentives::initialize(admin);
   }
 
   // View Fn
@@ -227,8 +229,7 @@ module message_board_addr::truthoracle{
 
     // Allow users to claim their rewards
     let market_to_creator = borrow_global<MarketToCreator>(@message_board_addr);
-    let creator = table::borrow(&market_to_creator.market_to_creator, market_id);
-    incentives::record_market_creator(market_id, *creator);
+    let _creator = table::borrow(&market_to_creator.market_to_creator, market_id);
   }
 
   public entry fun withdraw_payout(

@@ -69,18 +69,43 @@ module message_board_addr::incentives {
         amount: u64
     ) acquires IncentiveData {
         let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
-        
         if (amount >= EARLY_PARTICIPANT_THRESHOLD) {
+            // Initialize early participants table if needed
             if (!table::contains(&incentive_data.market_to_early_participants, market_id)) {
                 table::add(&mut incentive_data.market_to_early_participants, market_id, vector::empty());
             };
             let early_participants = table::borrow_mut(&mut incentive_data.market_to_early_participants, market_id);
+            
+            // Check for duplicate participant
+            let i = 0;
+            let len = vector::length(early_participants);
+            while (i < len) {
+                if (*vector::borrow(early_participants, i) == participant) {
+                    return // Exit if already added
+                };
+                i = i + 1;
+            };
+            
+            // Add participant if not found
             vector::push_back(early_participants, participant);
+
             // Track eligible markets for user
             if (!table::contains(&incentive_data.user_to_eligible_markets, participant)) {
                 table::add(&mut incentive_data.user_to_eligible_markets, participant, vector::empty());
             };
             let eligible_markets = table::borrow_mut(&mut incentive_data.user_to_eligible_markets, participant);
+            
+            // Check for duplicate market
+            let j = 0;
+            let n = vector::length(eligible_markets);
+            while (j < n) {
+                if (*vector::borrow(eligible_markets, j) == market_id) {
+                    return // Exit if already eligible
+                };
+                j = j + 1;
+            };
+            
+            // Add market if not found
             vector::push_back(eligible_markets, market_id);
         };
     }
@@ -91,12 +116,29 @@ module message_board_addr::incentives {
         _creator: address
     ) acquires IncentiveData {
         let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
-        table::add(&mut incentive_data.market_to_creator_rewards, market_id, false);
+        
+        // Only add if not already present
+        if (!table::contains(&incentive_data.market_to_creator_rewards, market_id)) {
+            table::add(&mut incentive_data.market_to_creator_rewards, market_id, false);
+        };
+        
         // Track eligible markets for creator
         if (!table::contains(&incentive_data.user_to_eligible_markets, _creator)) {
             table::add(&mut incentive_data.user_to_eligible_markets, _creator, vector::empty());
         };
         let eligible_markets = table::borrow_mut(&mut incentive_data.user_to_eligible_markets, _creator);
+        
+        // Check for duplicate market
+        let j = 0;
+        let n = vector::length(eligible_markets);
+        while (j < n) {
+            if (*vector::borrow(eligible_markets, j) == market_id) {
+                return // Exit if already eligible
+            };
+            j = j + 1;
+        };
+        
+        // Add market if not found
         vector::push_back(eligible_markets, market_id);
     }
 
@@ -108,6 +150,19 @@ module message_board_addr::incentives {
         let user_addr = signer::address_of(user);
         let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
         
+        // Check if already claimed
+        if (table::contains(&incentive_data.user_to_claimed_market_ids, user_addr)) {
+            let claimed_markets = table::borrow(&incentive_data.user_to_claimed_market_ids, user_addr);
+            let i = 0;
+            let len = vector::length(claimed_markets);
+            while (i < len) {
+                if (*vector::borrow(claimed_markets, i) == market_id) {
+                    abort EALREADY_CLAIMED
+                };
+                i = i + 1;
+            };
+        };
+
         // Initialize user rewards if not exists
         if (!exists<UserRewards>(user_addr)) {
             move_to(user, UserRewards {
@@ -115,9 +170,9 @@ module message_board_addr::incentives {
                 total_earned: 0
             });
         };
-
         let user_rewards = borrow_global_mut<UserRewards>(user_addr);
         let total_reward = 0u64;
+        let reward_type: u8 = 255; // 0: early, 1: creator, 2: winning, 255: none
 
         // Check early participant reward
         if (table::contains(&incentive_data.market_to_early_participants, market_id)) {
@@ -127,7 +182,8 @@ module message_board_addr::incentives {
             while (i < len) {
                 if (*vector::borrow(early_participants, i) == user_addr) {
                     total_reward = total_reward + EARLY_PARTICIPANT_REWARD;
-                    break
+                    reward_type = 0;
+                    break;
                 };
                 i = i + 1;
             };
@@ -136,31 +192,33 @@ module message_board_addr::incentives {
         // Check market creator reward
         if (table::contains(&incentive_data.market_to_creator_rewards, market_id)) {
             let claimed = table::borrow(&incentive_data.market_to_creator_rewards, market_id);
-            if (!*claimed) {
+            if (!*claimed && user_addr != @message_board_addr) { // Only allow non-admin creators
                 total_reward = total_reward + MARKET_CREATOR_REWARD;
+                reward_type = if (reward_type == 255) 1 else reward_type; // If not already set by early
                 *table::borrow_mut(&mut incentive_data.market_to_creator_rewards, market_id) = true;
-            };
+            }
         };
 
         // Transfer rewards if any
         if (total_reward > 0) {
             usdc::transfer(&object::generate_signer_for_extending(&borrow_global<ObjectController>(@message_board_addr).extend_ref), user_addr, total_reward);
             user_rewards.total_earned = user_rewards.total_earned + total_reward;
+            incentive_data.total_rewards_distributed = incentive_data.total_rewards_distributed + total_reward;
             
             event::emit(RewardClaimed {
                 user: user_addr,
                 amount: total_reward,
                 market_id,
-                reward_type: 0
+                reward_type: reward_type
             });
-        };
 
-        // After successful claim, track claimed market id
-        if (!table::contains(&incentive_data.user_to_claimed_market_ids, user_addr)) {
-            table::add(&mut incentive_data.user_to_claimed_market_ids, user_addr, vector::empty());
+            // Track claimed market after successful claim
+            if (!table::contains(&incentive_data.user_to_claimed_market_ids, user_addr)) {
+                table::add(&mut incentive_data.user_to_claimed_market_ids, user_addr, vector::empty());
+            };
+            let claimed_markets = table::borrow_mut(&mut incentive_data.user_to_claimed_market_ids, user_addr);
+            vector::push_back(claimed_markets, market_id);
         };
-        let claimed_markets = table::borrow_mut(&mut incentive_data.user_to_claimed_market_ids, user_addr);
-        vector::push_back(claimed_markets, market_id);
     }
 
     // Claim all rewards for a user

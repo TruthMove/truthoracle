@@ -40,7 +40,7 @@ function AdminForm({}: Props) {
         console.log("acc: " , acc);
 	}
 
-    const moduleAddress = "0x9ad719eeeaba8bca2c6e489caaee2723c8f071ff0ed31d31f41ea93adb5b1ceb";
+    const moduleAddress = "0x2a6c6b97583161fa7f130c062dd2216b882e35546a4b648f0e9769745397405e";
 
     const toast = useToast()
 
