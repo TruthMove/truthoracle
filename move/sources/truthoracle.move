@@ -5,7 +5,6 @@ module message_board_addr::truthoracle{
   use aptos_std::table::{Self, Table};
   use aptos_std::fixed_point64::{FixedPoint64, create_from_rational, get_raw_value, add, sub};
   use aptos_framework::object::{Self, ExtendRef};
-  #[test_only]
   use std::vector;
   use std::signer;
   use std::option::{Self, Option};
