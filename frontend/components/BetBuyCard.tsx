@@ -21,38 +21,44 @@ const BetBuyCard = () => {
   var betPlaced = false;
 
    function hexToAscii(hex:any) {
-        let str = '';
-        for (let i = 2; i < hex.length; i += 2) {
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        if (!hex) return "";
+        let str = "";
+        for (let i = 0; i < hex.length; i += 2) {
+            const hexValue = hex.substr(i, 2);
+            const decimalValue = parseInt(hexValue, 16);
+            str += String.fromCharCode(decimalValue);
         }
         return str;
     }
 
 useEffect(() => {
-    const fetchBets = async () => {
+    if (!id) return;
 
-        getMarketCount().then((m:any) => {
-                   let marketCount = m;
-                   for(let i = 0; i < marketCount; i++){
-                     getMarketMetadata(i).then((m:any) => {
-                       console.log("m", m[0].id);               
-                        if(m[0].id==id)
-                        {setBet(m[0]);
-                        setLmsr(m[1]);
-                        return;
-                        }
-                     });
-                     }
+    getMarketCount().then((m:any) => {
+        let marketCount = m;
+        for(let i = 0; i < marketCount; i++) {
+            getMarketMetadata(i).then((m:any) => {
+                if(m[0].id == id) {
+                    setBet(m[0]);
+                    setLmsr(m[1]);
+                }
+            });
+        }
+    });
+}, [id]);
 
-             })  
-             const{val1, val2} = getCurrentPrice(lmsr?.option_shares_1, lmsr?.option_shares_2, lmsr?.liquidity_param);
-            setCurrentPrice({val1, val2});
-            console.log("currentPrice: ", currentPrice);      
-        };
-
-        
-        fetchBets();
-  }, [account, betPlaced]);
+// Separate useEffect for price calculation
+useEffect(() => {
+    if (lmsr) {
+        const price = getCurrentPrice(
+            lmsr.option_shares_1,
+            lmsr.option_shares_2,
+            lmsr.liquidity_param
+        );
+        setCurrentPrice(price);
+        console.log("Updated price:", price);
+    }
+}, [lmsr]);
 
 
 
@@ -81,11 +87,16 @@ useEffect(() => {
   const toast = useToast()
 
 
-  function getCurrentPrice(q1:any, q2:any, b:any){
+  function getCurrentPrice(q1:any, q2:any, b:any) {
+        if (q1 === undefined || q2 === undefined || b === undefined || b === 0) {
+            return { val1: 0.5, val2: 0.5 }; // Default to 50/50 if data is missing
+        }
         let val_1 = Math.exp(q1/b);
         let val_2 = Math.exp(q2/b);
-
-        return { val1: val_1 / (val_1 + val_2), val2: val_2 / (val_1 + val_2) } 
+        return { 
+            val1: val_1 / (val_1 + val_2), 
+            val2: val_2 / (val_1 + val_2) 
+        };
     }
 
   const moduleAddress = "0x7fee3c77c04a65b0e05ba00cfa5d577f6dabffc763caeb84b021f96fa564bd9d";
