@@ -8,7 +8,7 @@ async function test() {
   await move.test({
     packageDirectoryPath: "move",
     namedAddresses: {
-      message_board_addr: "0x8a34ab45bd5101283b4f51d32ca7aaca9b1ce0ac0ed0a2ad58bcd114ca665b71",
+      message_board_addr: "0x7fee3c77c04a65b0e05ba00cfa5d577f6dabffc763caeb84b021f96fa564bd9d",
     },
   });
 }
