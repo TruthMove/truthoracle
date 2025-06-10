@@ -151,6 +151,14 @@ useEffect(() => {
     
   };
 
+  const getResultText = () => {
+    if (!bet) return null;
+    if (bet.status === 0) return null;
+    if (bet.result === 0) return `Winner: ${hexToAscii(bet.option_1)}`;
+    if (bet.result === 1) return `Winner: ${hexToAscii(bet.option_2)}`;
+    return "Market Expired";
+  };
+
   return (
     
     <>
@@ -211,102 +219,115 @@ useEffect(() => {
             </Text>
 
         </Stack>
-        <Stack width={"30%"} ml={20}>
-            <div style={{ color: 'white', backgroundColor: '#18191C' }} className="font-jbm p-4 rounded-lg border-2 border-[#CCCCFF] shadow-md w-full max-w-sm mx-auto">
-              <div className="text-center mb-4">
-                <h2 className="text-lg font-bold">Buy Bet</h2>
-                {bet && <h3 className="text-sm text-gray-300 mt-2">{hexToAscii(bet?.question)}</h3>}
+        {bet.status === 0 ? (
+            <Stack width={"30%"} ml={20}>
+                <div style={{ color: 'white', backgroundColor: '#18191C' }} className="font-jbm p-4 rounded-lg border-2 border-[#CCCCFF] shadow-md w-full max-w-sm mx-auto">
+                  <div className="text-center mb-4">
+                    <h2 className="text-lg font-bold">Buy Bet</h2>
+                    {bet && <h3 className="text-sm text-gray-300 mt-2">{hexToAscii(bet?.question)}</h3>}
+                  </div>
+
+          {bet && (
+            <>
+              <div className="flex flex-col items-center mb-4">
+                <button
+                  onClick={() => handleOptionClick(bet?.option_1)}
+                  className={`text-white font-bold py-2 px-4 mb-2 rounded ${selectedOption === bet?.option_1 ? 'bg-green-600' : 'hover:bg-green-600'}`}
+                  style={{
+                    borderColor: '#008000',
+                    borderWidth: '2px',
+                    minWidth: '100px',
+                    width: '100%',
+                  }}
+                >
+                  Bet {hexToAscii(bet.option_1)}
+                </button>
+                <button
+                  onClick={() => handleOptionClick(bet?.option_2)}
+                  className={`text-white font-bold py-2 px-4 rounded ${selectedOption === bet?.option_2 ? 'bg-red-600' : 'hover:bg-red-600'}`}
+                  style={{
+                    borderColor: '#FF0000',
+                    borderWidth: '2px',
+                    minWidth: '100px',
+                    width: '100%',
+                  }}
+                >
+                  Bet {hexToAscii(bet?.option_2)}
+                </button>
               </div>
 
-      {bet && (
-        <>
-          <div className="flex flex-col items-center mb-4">
-            <button
-              onClick={() => handleOptionClick(bet?.option_1)}
-              className={`text-white font-bold py-2 px-4 mb-2 rounded ${selectedOption === bet?.option_1 ? 'bg-green-600' : 'hover:bg-green-600'}`}
-              style={{
-                borderColor: '#008000',
-                borderWidth: '2px',
-                minWidth: '100px',
-                width: '100%',
-              }}
-            >
-              Bet {hexToAscii(bet.option_1)}
-            </button>
-            <button
-              onClick={() => handleOptionClick(bet?.option_2)}
-              className={`text-white font-bold py-2 px-4 rounded ${selectedOption === bet?.option_2 ? 'bg-red-600' : 'hover:bg-red-600'}`}
-              style={{
-                borderColor: '#FF0000',
-                borderWidth: '2px',
-                minWidth: '100px',
-                width: '100%',
-              }}
-            >
-              Bet {hexToAscii(bet?.option_2)}
-            </button>
-          </div>
+              <div className="flex flex-col items-center mb-4">
+                {/* Balance and Max Buttons Above Input */}
+                {/* <div className="flex justify-between w-full mb-2">
+                  <button
+                    className="text-white font-bold py-1 px-2 rounded"
+                    
+                  >
+                    Balance : $40.50
+                  </button>
+                  {/* <button
+                    className="text-white font-bold py-1 px-2 rounded bg-[#CCCCFF] hover:bg-gray-600"
+                    style={{ borderColor: '#333', borderWidth: '2px', minWidth: '60px' }}
+                  >
+                    Max
+                  </button> */}
+                {/* </div> */} 
 
-          <div className="flex flex-col items-center mb-4">
-            {/* Balance and Max Buttons Above Input */}
-            {/* <div className="flex justify-between w-full mb-2">
-              <button
-                className="text-white font-bold py-1 px-2 rounded"
-                
-              >
-                Balance : $40.50
-              </button>
-              {/* <button
-                className="text-white font-bold py-1 px-2 rounded bg-[#CCCCFF] hover:bg-gray-600"
-                style={{ borderColor: '#333', borderWidth: '2px', minWidth: '60px' }}
-              >
-                Max
-              </button> */}
-            {/* </div> */} 
+                {/* Input Field and Increment/Decrement Buttons */}
+                <div className="flex flex-row items-center w-max mb-4">
+                  <button
+                    onClick={decrementAmount}
+                    className="text-white font-bold py-2 px-4 rounded-l bg-[#CCCCFF] hover:bg-gray-600"
+                    style={{ borderColor: '#333', borderWidth: '2px' }}
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    value={amount.toFixed(2)}
+                    onChange={handleInputChange}
+                    placeholder="$0.0"
+                    className="text-black py-2 px-4 w-32 text-center"
+                    style={{ borderColor: '#333', borderWidth: '2px', borderLeft: 'none', borderRight: 'none' }}
+                  />
+                  <button
+                    onClick={incrementAmount}
+                    className="text-white font-bold py-2 px-4 rounded-r bg-[#CCCCFF] hover:bg-gray-600"
+                    style={{ borderColor: '#333', borderWidth: '2px' }}
+                  >
+                    +
+                  </button>
+                </div>
 
-            {/* Input Field and Increment/Decrement Buttons */}
-            <div className="flex flex-row items-center w-max mb-4">
-              <button
-                onClick={decrementAmount}
-                className="text-white font-bold py-2 px-4 rounded-l bg-[#CCCCFF] hover:bg-gray-600"
-                style={{ borderColor: '#333', borderWidth: '2px' }}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                value={amount.toFixed(2)}
-                onChange={handleInputChange}
-                placeholder="$0.0"
-                className="text-black py-2 px-4 w-32 text-center"
-                style={{ borderColor: '#333', borderWidth: '2px', borderLeft: 'none', borderRight: 'none' }}
-              />
-              <button
-                onClick={incrementAmount}
-                className="text-white font-bold py-2 px-4 rounded-r bg-[#CCCCFF] hover:bg-gray-600"
-                style={{ borderColor: '#333', borderWidth: '2px' }}
-              >
-                +
-              </button>
-            </div>
-
-            {/* BUY Button */}
-            <button
-              onClick={handleBuyClick}
-              className="text-black font-bold py-2 px-4 rounded bg-[#ebebf0] hover:bg-[#CCCCFF] hover:text-white"
-              style={{ borderColor: '#333', borderWidth: '2px', width: '100%' }}
-              disabled={!selectedOption || amount <= 0}
-            >
-              BUY
-            </button>
-            <div className="flex flex-col m-1 text-gray-500 text-sm justify-between font-jbm">
-                <p className='font-jbm'>⚠️ Due to slippage tolerance, price may vary.</p>
+                {/* BUY Button */}
+                <button
+                  onClick={handleBuyClick}
+                  className="text-black font-bold py-2 px-4 rounded bg-[#ebebf0] hover:bg-[#CCCCFF] hover:text-white"
+                  style={{ borderColor: '#333', borderWidth: '2px', width: '100%' }}
+                  disabled={!selectedOption || amount <= 0}
+                >
+                  BUY
+                </button>
+                <div className="flex flex-col m-1 text-gray-500 text-sm justify-between font-jbm">
+                    <p className='font-jbm'>⚠️ Due to slippage tolerance, price may vary.</p>
+                  </div>
               </div>
-          </div>
-        </>
-      )}
-            </div>
-        </Stack>
+            </>
+          )}
+                </div>
+            </Stack>
+        ) : (
+            <Stack width={"30%"} ml={20}>
+                <div style={{ color: 'white', backgroundColor: '#18191C' }} className="font-jbm p-4 rounded-lg border-2 border-[#CCCCFF] shadow-md w-full max-w-sm mx-auto">
+                  <div className="text-center mb-4">
+                    <h2 className="text-lg font-bold">Market Result</h2>
+                    <Text color="#CCCCFF" fontSize="lg" mt={4}>
+                        {getResultText()}
+                    </Text>
+                  </div>
+                </div>
+            </Stack>
+        )}
     </Flex>}
     </>
   );
