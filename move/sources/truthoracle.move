@@ -6,7 +6,6 @@ module message_board_addr::truthoracle{
   use aptos_std::fixed_point64::{FixedPoint64, create_from_rational, get_raw_value, add, sub};
   use aptos_framework::object::{Self, ExtendRef};
   #[test_only]
-  use std::debug;
   use std::vector;
   use std::signer;
   use std::option::{Self, Option};
@@ -404,12 +403,6 @@ module message_board_addr::truthoracle{
       i = i - 1;
       vector::push_back(&mut bytes, (((value >> (i * 8)) & 0xFF) as u8));
     };
-
-    // Remove leading zeros
-    while (vector::length(&bytes) > 1 && *vector::borrow(&bytes, 0) == 0) {
-      vector::remove(&mut bytes, 0);
-    };
-
     bytes
   }
 
@@ -817,7 +810,6 @@ module message_board_addr::truthoracle{
     // Get market balance
     let market_address = get_market_address(market_id);
     let market_balance_before = usdc::get_balance(market_address);
-    debug::print<u64>(&market_balance_before);
     assert!(market_balance_before == amount_invested_1 + amount_invested_2 + amount_invested_3 + amount_invested_4, 249);
     
     ////////////////////
@@ -828,7 +820,6 @@ module message_board_addr::truthoracle{
     // Get the LSMR data
     let lmsr = borrow_global<LMSR>(market_address);
     let payout_per_share = market_balance_before/lmsr.option_shares_1;
-    debug::print<u64>(&payout_per_share);
 
     // Check the Market Metadata
     let prediction_metadata = borrow_global<PredictionMarketMetaData>(market_address);
@@ -894,4 +885,71 @@ module message_board_addr::truthoracle{
     let user_market_data = table::borrow(&user_data.market_to_data, market_id);
     assert!(user_market_data.profit_made == expected_earnings, 256);
   } 
+
+  #[test(framework = @0x1, creator = @message_board_addr, user_1 = @0xBEEF, user_2 = @0xDEAD)]
+  fun test_market_lifecycle(framework: &signer, creator: &signer, user_1: &signer, user_2: &signer) acquires MarketCounter, LMSR, UserData, PredictionMarketMetaData, ObjectController, MarketToCreator {
+    setup_env(framework, creator);
+    setup_market(creator, user_1, user_2);
+
+    // Create first market (this will be market_id 1 since setup_market created market_id 0)
+    let question_1: vector<u8> = b"Will Bitcoin reach $100k in 2024?";
+    let image_url_1: vector<u8> = b"https://example.com/bitcoin";
+    let description_1: vector<u8> = b"Market on Bitcoin's price reaching $100k in 2024";
+    let option_1_1: vector<u8> = b"Yes";
+    let option_2_1: vector<u8> = b"No";
+    let liquidity_param_1 = 250;
+
+    init_market(creator, question_1, image_url_1, description_1, option_1_1, option_2_1, liquidity_param_1);
+
+    // Verify first market creation
+    let market_id_1 = 1; // Changed from 0 to 1
+    let market_address_1 = get_market_address(market_id_1);
+    let prediction_metadata_1 = borrow_global<PredictionMarketMetaData>(market_address_1);
+    assert!(prediction_metadata_1.id == market_id_1, 301);
+    assert!(prediction_metadata_1.status == IN_PROGRESS, 302);
+
+    // Buy some shares in first market
+    buy_shares(user_1, market_id_1, 0, 10); // Buy 10 shares of option 1
+    buy_shares(user_2, market_id_1, 1, 15); // Buy 15 shares of option 2
+
+    // Resolve first market
+    record_result(creator, market_id_1, 0); // Option 1 wins
+
+    // Verify first market resolution
+    let prediction_metadata_1 = borrow_global<PredictionMarketMetaData>(market_address_1);
+    assert!(prediction_metadata_1.status == FINISHED, 303);
+    assert!(prediction_metadata_1.result == option::some<u8>(0), 304);
+
+    // Create second market
+    let question_2: vector<u8> = b"Will Ethereum reach $10k in 2024?";
+    let image_url_2: vector<u8> = b"https://example.com/ethereum";
+    let description_2: vector<u8> = b"Market on Ethereum's price reaching $10k in 2024";
+    let option_1_2: vector<u8> = b"Yes";
+    let option_2_2: vector<u8> = b"No";
+    let liquidity_param_2 = 300;
+
+    init_market(creator, question_2, image_url_2, description_2, option_1_2, option_2_2, liquidity_param_2);
+
+    // Verify second market creation
+    let market_id_2 = 2; // Changed from 1 to 2
+    let market_address_2 = get_market_address(market_id_2);
+    let prediction_metadata_2 = borrow_global<PredictionMarketMetaData>(market_address_2);
+    assert!(prediction_metadata_2.id == market_id_2, 305);
+    assert!(prediction_metadata_2.status == IN_PROGRESS, 306);
+    assert!(prediction_metadata_2.question == question_2, 307);
+    assert!(prediction_metadata_2.option_1 == option_1_2, 308);
+    assert!(prediction_metadata_2.option_2 == option_2_2, 309);
+
+    // Verify market counter
+    let counter = borrow_global<MarketCounter>(@message_board_addr);
+    assert!(counter.value == 3, 310); // Changed from 2 to 3
+
+    // Verify both markets exist and have correct data
+    let lmsr_1 = borrow_global<LMSR>(market_address_1);
+    let lmsr_2 = borrow_global<LMSR>(market_address_2);
+    assert!(lmsr_1.option_shares_1 == 10, 311);
+    assert!(lmsr_1.option_shares_2 == 15, 312);
+    assert!(lmsr_2.option_shares_1 == 0, 313);
+    assert!(lmsr_2.option_shares_2 == 0, 314);
+  }
 }
