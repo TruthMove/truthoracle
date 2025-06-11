@@ -16,6 +16,7 @@ module message_board_addr::incentives {
     const ENOT_INITIALIZED: u64 = 1;
     const EINSUFFICIENT_BALANCE: u64 = 2;
     const EALREADY_CLAIMED: u64 = 7;
+    const ENO_UNCLAIMED_CLOSED_MARKETS: u64 = 8;
 
     // Structs
     struct ObjectController has key {
@@ -30,6 +31,7 @@ module message_board_addr::incentives {
         user_to_claimed_market_ids: Table<address, vector<u64>>,
         market_to_winning_predictors: Table<u64, vector<address>>,
         market_to_creator: Table<u64, address>,
+        closed_markets: vector<u64>,
         total_rewards_distributed: u64
     }
 
@@ -61,6 +63,7 @@ module message_board_addr::incentives {
             user_to_claimed_market_ids: table::new(),
             market_to_winning_predictors: table::new(),
             market_to_creator: table::new(),
+            closed_markets: vector::empty(),
             total_rewards_distributed: 0
         });
     }
@@ -291,7 +294,22 @@ module message_board_addr::incentives {
             let len = vector::length(eligible_markets);
             while (i < len) {
                 let market_id = *vector::borrow(eligible_markets, i);
-                pending = pending + calculate_pending_rewards(incentive_data, user, market_id, claimed_markets);
+                // Check if market is closed by looking at the closed_markets vector
+                let is_closed = false;
+                let closed_markets = &incentive_data.closed_markets;
+                let j = 0;
+                let closed_len = vector::length(closed_markets);
+                while (j < closed_len) {
+                    if (*vector::borrow(closed_markets, j) == market_id) {
+                        is_closed = true;
+                        break
+                    };
+                    j = j + 1;
+                };
+                // Only calculate rewards for closed markets
+                if (is_closed) {
+                    pending = pending + calculate_pending_rewards(incentive_data, user, market_id, claimed_markets);
+                };
                 i = i + 1;
             };
         };
@@ -409,7 +427,7 @@ module message_board_addr::incentives {
         let user_addr = signer::address_of(user);
         let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
         if (!table::contains(&incentive_data.user_to_eligible_markets, user_addr)) {
-            return;
+            abort ENO_UNCLAIMED_CLOSED_MARKETS
         };
         let eligible_markets_ref = table::borrow(&incentive_data.user_to_eligible_markets, user_addr);
         let n = vector::length(eligible_markets_ref);
@@ -417,9 +435,30 @@ module message_board_addr::incentives {
         let i = 0;
         while (i < n) {
             let market_id = *vector::borrow(eligible_markets_ref, i);
-            vector::push_back(&mut market_ids, market_id);
+            // Check if market is closed by looking at the closed_markets vector
+            let is_closed = false;
+            let closed_markets = &incentive_data.closed_markets;
+            let j = 0;
+            let closed_len = vector::length(closed_markets);
+            while (j < closed_len) {
+                if (*vector::borrow(closed_markets, j) == market_id) {
+                    is_closed = true;
+                    break
+                };
+                j = j + 1;
+            };
+            // Only add market if it's closed
+            if (is_closed) {
+                vector::push_back(&mut market_ids, market_id);
+            };
             i = i + 1;
         };
+        
+        // Check if there are any markets to claim
+        if (vector::is_empty(&market_ids)) {
+            abort ENO_UNCLAIMED_CLOSED_MARKETS
+        };
+        
         // Now, no more outstanding references to incentive_data
         let m = vector::length(&market_ids);
         let j = 0;
@@ -453,6 +492,42 @@ module message_board_addr::incentives {
             return vector::empty<u64>();
         };
         *table::borrow(&incentive_data.user_to_claimed_market_ids, user)
+    }
+
+    // Record that a market has been closed
+    public entry fun record_market_closed(market_id: u64) acquires IncentiveData {
+        let incentive_data = borrow_global_mut<IncentiveData>(@message_board_addr);
+        let closed_markets = &mut incentive_data.closed_markets;
+        
+        // Check if market is already in the list
+        let i = 0;
+        let len = vector::length(closed_markets);
+        while (i < len) {
+            if (*vector::borrow(closed_markets, i) == market_id) {
+                return // Market already closed
+            };
+            i = i + 1;
+        };
+        
+        // Add market to closed list
+        vector::push_back(closed_markets, market_id);
+    }
+
+    // View function to check if a market is closed
+    #[view]
+    public fun is_market_closed(market_id: u64): bool acquires IncentiveData {
+        let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
+        let closed_markets = &incentive_data.closed_markets;
+        
+        let i = 0;
+        let len = vector::length(closed_markets);
+        while (i < len) {
+            if (*vector::borrow(closed_markets, i) == market_id) {
+                return true
+            };
+            i = i + 1;
+        };
+        false
     }
 
     #[test_only]
@@ -503,6 +578,9 @@ module message_board_addr::incentives {
         // Simulate early participant with amount >= EARLY_PARTICIPANT_THRESHOLD
         // This will also add the market to user's eligible markets
         record_early_participant(market_id, user_addr, EARLY_PARTICIPANT_THRESHOLD);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // User should have pending reward
         let (pending, _total_earned) = get_user_rewards(user_addr);
@@ -564,6 +642,9 @@ module message_board_addr::incentives {
         
         // Record market creator
         record_market_creator(market_id, user_addr);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // Ensure the USDC vault is funded with enough USDC for the reward
         let vault_address = object::create_object_address(&@message_board_addr, b"USDC");
@@ -596,6 +677,9 @@ module message_board_addr::incentives {
         
         // Record winning prediction
         record_winning_prediction(market_id, user_addr);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // User should have pending reward
         let (pending, _total_earned) = get_user_rewards(user_addr);
@@ -632,6 +716,9 @@ module message_board_addr::incentives {
         
         // Record early participant with amount at threshold
         record_early_participant(market_id, user_addr, EARLY_PARTICIPANT_THRESHOLD);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // Should have early participant reward
         let (pending, total_earned) = get_user_rewards(user_addr);
@@ -677,6 +764,9 @@ module message_board_addr::incentives {
         
         // Record market creator
         record_market_creator(market_id, user_addr);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // Should have market creator reward
         let (pending, total_earned) = get_user_rewards(user_addr);
@@ -715,6 +805,9 @@ module message_board_addr::incentives {
         
         // Record winning prediction
         record_winning_prediction(market_id, user_addr);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // Should have winning prediction reward
         let (pending, total_earned) = get_user_rewards(user_addr);
@@ -770,6 +863,9 @@ module message_board_addr::incentives {
         record_early_participant(market_id, user_addr, EARLY_PARTICIPANT_THRESHOLD);
         record_market_creator(market_id, user_addr);
         record_winning_prediction(market_id, user_addr);
+
+        // Mark market as closed
+        record_market_closed(market_id);
         
         // Should have all rewards combined
         let (pending, total_earned) = get_user_rewards(user_addr);
@@ -861,6 +957,9 @@ module message_board_addr::incentives {
         // Record winning predictions
         record_winning_prediction(market1_id, user1_addr);
         record_winning_prediction(market1_id, user2_addr);
+
+        // Mark first market as closed
+        record_market_closed(market1_id);
         
         // Claim rewards for first market
         claim_rewards(user1, market1_id);
@@ -920,6 +1019,9 @@ module message_board_addr::incentives {
         // Record winning predictions
         record_winning_prediction(market2_id, user2_addr);
         record_winning_prediction(market2_id, user3_addr);
+
+        // Mark second market as closed
+        record_market_closed(market2_id);
         
         // Calculate expected rewards
         let expected_user2_pending = MARKET_CREATOR_REWARD + EARLY_PARTICIPANT_REWARD + WINNING_PREDICTION_BONUS;

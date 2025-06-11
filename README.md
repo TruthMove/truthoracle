@@ -56,7 +56,7 @@ aptos move publish
 
 To mint 500 mock USDC (500 * 10^8 = 50000000000) to your address, run:
 ```sh
-aptos move run --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::usdc::mint --profile default --args address:0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec u64:100000000000
+aptos move run --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::usdc::mint --profile default --args address:0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49 u64:100000000000
 ```
 
 6. **Mint USDC to the object address**
@@ -64,7 +64,7 @@ aptos move run --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be
    To mint USDC for contract rewards, you need the USDC object address. You can get this by calling the `get_metadata` view function from the USDC module:
 
    ```sh
-   aptos move view --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::usdc::get_metadata
+   aptos move view --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::usdc::get_metadata
    ```
 
    The output will look like:
@@ -79,9 +79,9 @@ aptos move run --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be
 
    Now mint USDC to this address:
    ```sh
-   aptos move run --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::usdc::mint --profile default --args address:<OBJECT_ADDRESS> u64:100000000000
+   aptos move run --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::usdc::mint --profile default --args address:<OBJECT_ADDRESS> u64:100000000000
    # Example:
-   # aptos move run --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::usdc::mint --profile default --args address:0x70a4e7793f9d3e7cc45363c9b4682c118bd40b04f4899363f5221ba2e4e91176 u64:100000000000
+   # aptos move run --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::usdc::mint --profile default --args address:0x70a4e7793f9d3e7cc45363c9b4682c118bd40b04f4899363f5221ba2e4e91176 u64:100000000000
    ```
 
 ## Resolving a Market (Single-Admin Method)
@@ -91,7 +91,7 @@ To resolve a market directly as the admin, use the following command:
 **Generic Command:**
 ```sh
 aptos move run \
-  --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::truthoracle::record_result \
+  --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::truthoracle::record_result \
   --profile <admin-profile> \
   --args u64:<market_id> u8:<result>
 ```
@@ -102,7 +102,7 @@ aptos move run \
 **Example Command:**
 ```sh
 aptos move run \
-  --function-id 0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec::truthoracle::record_result \
+  --function-id 0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49::truthoracle::record_result \
   --profile default \
   --args u64:5 u8:0
 ```
@@ -110,7 +110,7 @@ This resolves market ID 5 with result 0 (option 1) using the `default` profile.
 
 ## Our deployments
 
-Mainnet: [0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec](https://explorer.aptoslabs.com/account/0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec?network=mainnet)
+Mainnet: [0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49](https://explorer.aptoslabs.com/account/0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49?network=mainnet)
 
 Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 

@@ -255,6 +255,9 @@ module message_board_addr::truthoracle{
     prediction_market_metadata.result = option::some<u8>(result);
     prediction_market_metadata.payout_per_share = option::some<u64>(payout_per_share);
 
+    // Record market as closed in incentives module
+    incentives::record_market_closed(market_id);
+
     // Record winning predictions for incentives
     let market_to_creator = borrow_global<MarketToCreator>(@message_board_addr);
     let _creator = table::borrow(&market_to_creator.market_to_creator, market_id);

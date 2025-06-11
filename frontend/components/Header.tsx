@@ -25,7 +25,7 @@ export function Header() {
             return;
         }
 
-        const moduleAddress = "0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec"
+        const moduleAddress = "0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49"
 
         if(account){
                 const committedTxn = await signAndSubmitTransaction({  data: {
