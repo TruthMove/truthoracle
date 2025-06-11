@@ -3,7 +3,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import Activity from './Portfolio/Activity'
 
 function Portfolio() {
-  const { account } = useWallet();
+  useWallet(); // Only call for context if needed, but don't destructure account
 
   return (
     <>
