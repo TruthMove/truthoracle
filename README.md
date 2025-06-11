@@ -115,3 +115,39 @@ Mainnet: [0xbde9b5978954614b28adf8e8c71d919271ccad89a878d4d914249444a31f2b49](ht
 Testnet: [0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace](https://explorer.aptoslabs.com/account/0xf57ffdaa57e13bc27ac9b46663749a5d03a846ada4007dfdf1483d482b48dace?network=testnet)
 
 Front-end: [https://truth-oracle.vercel.app/](https://truth-oracle.vercel.app/)
+
+
+## Documentation
+
+- **Getting Started:**  
+  See [README.md](https://github.com/TruthMove/truthoracle/blob/main/README.md) for setup, installation, and deployment instructions.
+
+- **Architecture Overview:**  
+  - [Market Resolution System](https://github.com/TruthMove/truthoracle/tree/main/market-resolution)
+  - [ZKP Circuits](https://github.com/TruthMove/truthoracle/tree/main/noir/circuits)
+  - [Smart Contracts](https://github.com/TruthMove/truthoracle/tree/main/move/sources)
+
+- **API Reference:**  
+  - [AptosService API](./blockend/aptosService.js) – Functions for interacting with the blockchain and oracles.
+
+- **Testing Reports:**  
+  - [Smart Contract Tests](https://github.com/TruthMove/truthoracle/tree/main/move/tests)
+  - [ZKP Circuit Tests](https://github.com/TruthMove/truthoracle/tree/main/noir/tests)
+
+- **User Interface:**  
+  - [UI Components](https://github.com/TruthMove/truthoracle/tree/main/frontend/components)
+  - [Live Demo](https://truth-oracle.vercel.app/)
+
+- **Testing:**  
+  - All modules are documented with clear usage instructions and architecture overviews.
+  - Rigorous tests for all Move smart contracts have been added in the `/move/sources` directory.
+
+
+## Repository
+
+- **Full Codebase:**  
+  [https://github.com/TruthMove/truthoracle](https://github.com/TruthMove/truthoracle)
+
+---
+
+**For more details, see the inline documentation and `/docs` directory in the repository.**
