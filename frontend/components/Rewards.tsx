@@ -6,7 +6,7 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 import { Network } from "aptos";
 
-const moduleAddress = "0x7fee3c77c04a65b0e05ba00cfa5d577f6dabffc763caeb84b021f96fa564bd9d";
+const moduleAddress = "0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec";
 const config = new AptosConfig({ network: Network.MAINNET });
 const aptos = new Aptos(config);
 
@@ -35,9 +35,14 @@ const Rewards = () => {
                     total: Number(total) / 1e8
                 });
                 const rewardMarkets = await getRewardMarkets(account.address);
-                setRewardMarkets(rewardMarkets[0].map((id: any) => Number(id)));
                 const claimedMarkets = await getClaimedMarkets(account.address);
-                setClaimedMarkets(claimedMarkets[0].map((id: any) => Number(id)));
+                const claimedMarketIds = claimedMarkets[0].map((id: any) => Number(id));
+                setClaimedMarkets(claimedMarketIds);
+                
+                // Filter out claimed markets from eligible markets
+                const eligibleMarketIds = rewardMarkets[0].map((id: any) => Number(id));
+                const unclaimedMarkets = eligibleMarketIds.filter((id: number) => !claimedMarketIds.includes(id));
+                setRewardMarkets(unclaimedMarkets);
             } catch (error) {
                 console.error("Error fetching rewards markets:", error);
                 toast({
@@ -142,7 +147,7 @@ const Rewards = () => {
                                 </Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color="#E0E0E0">Total Earned:</Text>
+                                <Text color="#E0E0E0">Total Claimed Rewards:</Text>
                                 <Text fontSize="lg" color="white">
                                     {rewards.total.toFixed(2)} USDC
                                 </Text>
@@ -160,14 +165,16 @@ const Rewards = () => {
                         {rewards.pending === 0 ? "No Rewards to Claim" : "Claim All Rewards"}
                     </Button>
 
-                    {/* Eligible Markets Section */}
+                    {/* Pending Reward Markets Section */}
                     <Box p={4} borderWidth={1} borderRadius="lg" bg="#23292B">
-                        <Heading size="md" color="white" mb={3}>Eligible Markets</Heading>
+                        <Heading size="md" color="white" mb={3}>Pending Reward Markets</Heading>
                         {rewardMarkets.length === 0 ? (
-                            <Text color="#E0E0E0">No markets are currently eligible for rewards.</Text>
+                            <Text color="#E0E0E0">You have no unclaimed rewards at the moment.</Text>
                         ) : (
                             <VStack align="stretch" spacing={2}>
-                                <Text color="#E0E0E0">You are eligible for rewards from {rewardMarkets.length} markets:</Text>
+                                <Text color="#E0E0E0">
+                                  You have unclaimed rewards in {rewardMarkets.length} {rewardMarkets.length === 1 ? "market" : "markets"}:
+                                </Text>
                                 <Box 
                                     p={2} 
                                     bg="#1A1F21" 
@@ -183,14 +190,16 @@ const Rewards = () => {
                         )}
                     </Box>
 
-                    {/* Claimed Markets Section */}
+                    {/* Claimed Reward Markets Section */}
                     <Box p={4} borderWidth={1} borderRadius="lg" bg="#23292B">
-                        <Heading size="md" color="white" mb={3}>Claimed Markets</Heading>
+                        <Heading size="md" color="white" mb={3}>Claimed Reward Markets</Heading>
                         {claimedMarkets.length === 0 ? (
-                            <Text color="#E0E0E0">No rewards have been claimed yet.</Text>
+                            <Text color="#E0E0E0">You have not claimed any rewards yet.</Text>
                         ) : (
                             <VStack align="stretch" spacing={2}>
-                                <Text color="#E0E0E0">You have claimed rewards from {claimedMarkets.length} markets:</Text>
+                                <Text color="#E0E0E0">
+                                  You have already claimed rewards from {claimedMarkets.length} {claimedMarkets.length === 1 ? "market" : "markets"}:
+                                </Text>
                                 <Box 
                                     p={2} 
                                     bg="#1A1F21" 

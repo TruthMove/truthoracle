@@ -162,7 +162,7 @@ export function WalletSelector() {
   const formatEvent = (event: AccountEvent) => {
     const date = new Date(event.timestamp * 1000);
     const timeString = date.toLocaleTimeString();
-    const moduleAddress = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0x7fee3c77c04a65b0e05ba00cfa5d577f6dabffc763caeb84b021f96fa564bd9d";
+    const moduleAddress = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec";
     
     switch (event.event_type) {
       case `${moduleAddress}::truthoracle::MarketCreated`:

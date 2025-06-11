@@ -18,7 +18,6 @@ const BetBuyCard = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null); // State to track selected option
   const [currentPrice, setCurrentPrice] = useState<any>(null);
   const {account} = useWallet();
-  var betPlaced = false;
 
    function hexToAscii(hex:any) {
         if (!hex) return "";
@@ -99,7 +98,7 @@ useEffect(() => {
         };
     }
 
-  const moduleAddress = "0x7fee3c77c04a65b0e05ba00cfa5d577f6dabffc763caeb84b021f96fa564bd9d";
+  const moduleAddress = "0xf951a56dfc533b56fd092ae9aeeb2056a353d8a72c4ea76be674e84b9a61a3ec";
     const {  signAndSubmitTransaction } = useWallet();
 
     const config = new AptosConfig({ network: Network.MAINNET });
@@ -141,7 +140,6 @@ useEffect(() => {
 
     buyShares(parseInt(bet?.id), option, amount).then((sharesBought:any) => {
         console.log("Shares Bought: ", sharesBought);
-        betPlaced=true;
     })
     // if (amount > 0 && selectedOption) {
     //   alert(`Placed a bet of $${amount.toFixed(2)} on ${selectedOption}`);

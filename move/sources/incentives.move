@@ -196,6 +196,109 @@ module message_board_addr::incentives {
         vector::push_back(eligible_markets, market_id);
     }
 
+    // Helper method to calculate pending rewards for a user and market
+    fun calculate_pending_rewards(
+        incentive_data: &IncentiveData,
+        user: address,
+        market_id: u64,
+        claimed_markets: &vector<u64>
+    ): u64 {
+        let pending = 0u64;
+        
+        // Skip if market already claimed
+        let claimed = false;
+        let j = 0;
+        let n = vector::length(claimed_markets);
+        while (j < n) {
+            if (*vector::borrow(claimed_markets, j) == market_id) {
+                claimed = true;
+                break;
+            };
+            j = j + 1;
+        };
+        if (claimed) {
+            return pending;
+        };
+        
+        // Check each type of reward
+        // Early participant
+        if (table::contains(&incentive_data.market_to_early_participants, market_id)) {
+            let early_participants = table::borrow(&incentive_data.market_to_early_participants, market_id);
+            let j = 0;
+            let n = vector::length(early_participants);
+            while (j < n) {
+                if (*vector::borrow(early_participants, j) == user) {
+                    pending = pending + EARLY_PARTICIPANT_REWARD;
+                    break;
+                };
+                j = j + 1;
+            };
+        };
+        
+        // Market creator
+        if (table::contains(&incentive_data.market_to_creator_rewards, market_id)) {
+            let claimed_creator = table::borrow(&incentive_data.market_to_creator_rewards, market_id);
+            if (!*claimed_creator && user != @message_board_addr) {
+                // Check if user is the market creator
+                if (table::contains(&incentive_data.market_to_creator, market_id)) {
+                    let creator = table::borrow(&incentive_data.market_to_creator, market_id);
+                    if (*creator == user) {
+                        pending = pending + MARKET_CREATOR_REWARD;
+                    }
+                }
+            }
+        };
+        
+        // Winning prediction - only add if user is a winning predictor
+        if (table::contains(&incentive_data.market_to_winning_predictors, market_id)) {
+            let winning_predictors = table::borrow(&incentive_data.market_to_winning_predictors, market_id);
+            let j = 0;
+            let n = vector::length(winning_predictors);
+            while (j < n) {
+                if (*vector::borrow(winning_predictors, j) == user) {
+                    pending = pending + WINNING_PREDICTION_BONUS;
+                    break;
+                };
+                j = j + 1;
+            };
+        };
+        
+        pending
+    }
+
+    // Calculate rewards on-the-fly
+    #[view]
+    public fun get_user_rewards(user: address): (u64, u64) acquires IncentiveData, UserRewards {
+        let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
+        let pending = 0u64;
+        let total_earned = if (exists<UserRewards>(user)) {
+            borrow_global<UserRewards>(user).total_earned
+        } else {
+            0
+        };
+        
+        // Get claimed markets for user
+        let claimed_markets = if (table::contains(&incentive_data.user_to_claimed_market_ids, user)) {
+            table::borrow(&incentive_data.user_to_claimed_market_ids, user)
+        } else {
+            &vector::empty<u64>()
+        };
+        
+        // Check eligible markets
+        if (table::contains(&incentive_data.user_to_eligible_markets, user)) {
+            let eligible_markets = table::borrow(&incentive_data.user_to_eligible_markets, user);
+            let i = 0;
+            let len = vector::length(eligible_markets);
+            while (i < len) {
+                let market_id = *vector::borrow(eligible_markets, i);
+                pending = pending + calculate_pending_rewards(incentive_data, user, market_id, claimed_markets);
+                i = i + 1;
+            };
+        };
+        
+        (pending, total_earned)
+    }
+
     // Claim rewards for a market
     public entry fun claim_rewards(
         user: &signer,
@@ -224,17 +327,25 @@ module message_board_addr::incentives {
             });
         };
         let user_rewards = borrow_global_mut<UserRewards>(user_addr);
-        let total_reward = 0u64;
+
+        // Get claimed markets for user
+        let claimed_markets = if (table::contains(&incentive_data.user_to_claimed_market_ids, user_addr)) {
+            table::borrow(&incentive_data.user_to_claimed_market_ids, user_addr)
+        } else {
+            &vector::empty<u64>()
+        };
+
+        // Calculate total reward using helper method
+        let total_reward = calculate_pending_rewards(incentive_data, user_addr, market_id, claimed_markets);
         let reward_type: u8 = 255; // 0: early, 1: creator, 2: winning, 255: none
 
-        // Check early participant reward
+        // Determine reward type for event emission
         if (table::contains(&incentive_data.market_to_early_participants, market_id)) {
             let early_participants = table::borrow(&incentive_data.market_to_early_participants, market_id);
             let i = 0;
             let len = vector::length(early_participants);
             while (i < len) {
                 if (*vector::borrow(early_participants, i) == user_addr) {
-                    total_reward = total_reward + EARLY_PARTICIPANT_REWARD;
                     reward_type = 0;
                     break;
                 };
@@ -242,25 +353,26 @@ module message_board_addr::incentives {
             };
         };
 
-        // Check market creator reward
         if (table::contains(&incentive_data.market_to_creator_rewards, market_id)) {
             let claimed_creator = table::borrow(&incentive_data.market_to_creator_rewards, market_id);
-            if (!*claimed_creator && user_addr != @message_board_addr) { // Only allow non-admin creators
-                total_reward = total_reward + MARKET_CREATOR_REWARD;
-                reward_type = if (reward_type == 255) 1 else reward_type; // If not already set by early
-                *table::borrow_mut(&mut incentive_data.market_to_creator_rewards, market_id) = true;
+            if (!*claimed_creator && user_addr != @message_board_addr) {
+                if (table::contains(&incentive_data.market_to_creator, market_id)) {
+                    let creator = table::borrow(&incentive_data.market_to_creator, market_id);
+                    if (*creator == user_addr) {
+                        reward_type = if (reward_type == 255) 1 else reward_type;
+                        *table::borrow_mut(&mut incentive_data.market_to_creator_rewards, market_id) = true;
+                    }
+                }
             }
         };
 
-        // Check winning prediction reward
         if (table::contains(&incentive_data.market_to_winning_predictors, market_id)) {
             let winning_predictors = table::borrow(&incentive_data.market_to_winning_predictors, market_id);
             let i = 0;
             let len = vector::length(winning_predictors);
             while (i < len) {
                 if (*vector::borrow(winning_predictors, i) == user_addr) {
-                    total_reward = total_reward + WINNING_PREDICTION_BONUS;
-                    reward_type = if (reward_type == 255) 2 else reward_type; // If not already set by early/creator
+                    reward_type = if (reward_type == 255) 2 else reward_type;
                     break;
                 };
                 i = i + 1;
@@ -316,98 +428,6 @@ module message_board_addr::incentives {
             claim_rewards(user, market_id);
             j = j + 1;
         };
-    }
-
-    // Calculate rewards on-the-fly
-    #[view]
-    public fun get_user_rewards(user: address): (u64, u64) acquires IncentiveData, UserRewards {
-        let incentive_data = borrow_global<IncentiveData>(@message_board_addr);
-        let pending = 0u64;
-        let total_earned = if (exists<UserRewards>(user)) {
-            borrow_global<UserRewards>(user).total_earned
-        } else {
-            0
-        };
-        
-        // Get claimed markets for user
-        let claimed_markets = if (table::contains(&incentive_data.user_to_claimed_market_ids, user)) {
-            table::borrow(&incentive_data.user_to_claimed_market_ids, user)
-        } else {
-            &vector::empty<u64>()
-        };
-        
-        // Check eligible markets
-        if (table::contains(&incentive_data.user_to_eligible_markets, user)) {
-            let eligible_markets = table::borrow(&incentive_data.user_to_eligible_markets, user);
-            let i = 0;
-            let len = vector::length(eligible_markets);
-            while (i < len) {
-                let market_id = *vector::borrow(eligible_markets, i);
-                
-                // Skip if market already claimed
-                let claimed = false;
-                let j = 0;
-                let n = vector::length(claimed_markets);
-                while (j < n) {
-                    if (*vector::borrow(claimed_markets, j) == market_id) {
-                        claimed = true;
-                        break;
-                    };
-                    j = j + 1;
-                };
-                if (claimed) {
-                    i = i + 1;
-                    continue;
-                };
-                
-                // Check each type of reward
-                // Early participant
-                if (table::contains(&incentive_data.market_to_early_participants, market_id)) {
-                    let early_participants = table::borrow(&incentive_data.market_to_early_participants, market_id);
-                    let j = 0;
-                    let n = vector::length(early_participants);
-                    while (j < n) {
-                        if (*vector::borrow(early_participants, j) == user) {
-                            pending = pending + EARLY_PARTICIPANT_REWARD;
-                            break;
-                        };
-                        j = j + 1;
-                    };
-                };
-                
-                // Market creator
-                if (table::contains(&incentive_data.market_to_creator_rewards, market_id)) {
-                    let claimed_creator = table::borrow(&incentive_data.market_to_creator_rewards, market_id);
-                    if (!*claimed_creator && user != @message_board_addr) {
-                        // Check if user is the market creator
-                        if (table::contains(&incentive_data.market_to_creator, market_id)) {
-                            let creator = table::borrow(&incentive_data.market_to_creator, market_id);
-                            if (*creator == user) {
-                                pending = pending + MARKET_CREATOR_REWARD;
-                            }
-                        }
-                    }
-                };
-                
-                // Winning prediction - only add if user is a winning predictor
-                if (table::contains(&incentive_data.market_to_winning_predictors, market_id)) {
-                    let winning_predictors = table::borrow(&incentive_data.market_to_winning_predictors, market_id);
-                    let j = 0;
-                    let n = vector::length(winning_predictors);
-                    while (j < n) {
-                        if (*vector::borrow(winning_predictors, j) == user) {
-                            pending = pending + WINNING_PREDICTION_BONUS;
-                            break;
-                        };
-                        j = j + 1;
-                    };
-                };
-                
-                i = i + 1;
-            };
-        };
-        
-        (pending, total_earned)
     }
 
     #[view]
