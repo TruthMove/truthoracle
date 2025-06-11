@@ -167,13 +167,13 @@ const Rewards = () => {
 
                     {/* Pending Reward Markets Section */}
                     <Box p={4} borderWidth={1} borderRadius="lg" bg="#23292B">
-                        <Heading size="md" color="white" mb={3}>Pending Reward Markets</Heading>
+                        <Heading size="md" color="white" mb={3}>Eligible Reward Markets</Heading>
                         {rewardMarkets.length === 0 ? (
-                            <Text color="#E0E0E0">You have no unclaimed rewards at the moment.</Text>
+                            <Text color="#E0E0E0">You have no eligible markets for rewards at the moment.</Text>
                         ) : (
                             <VStack align="stretch" spacing={2}>
                                 <Text color="#E0E0E0">
-                                  You have unclaimed rewards in {rewardMarkets.length} {rewardMarkets.length === 1 ? "market" : "markets"}:
+                                  You are eligible for rewards in {rewardMarkets.length} {rewardMarkets.length === 1 ? "market" : "markets"}:
                                 </Text>
                                 <Box 
                                     p={2} 
