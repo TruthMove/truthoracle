@@ -114,13 +114,39 @@ useEffect(() => {
             }, });
                 await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
                 console.log(`Committed transaction: ${committedTxn.hash}`);
-                  toast({
-          title: 'Bet Placed',
-          description: "We've added your bet to the market.",
-          status: 'success',
-          duration: 9000,
-          isClosable: true,
-        })
+                
+                // Refresh all necessary data
+                // 1. Refresh portfolio data
+                if ((window as any).refreshPortfolio) {
+                    (window as any).refreshPortfolio();
+                }
+                
+                // 2. Refresh marketplace data
+                if ((window as any).refreshMarketplace) {
+                    (window as any).refreshMarketplace();
+                }
+                
+                // 3. Refresh current bet data
+                if (!id) return;
+                getMarketCount().then((m:any) => {
+                    let marketCount = m;
+                    for(let i = 0; i < marketCount; i++) {
+                        getMarketMetadata(i).then((m:any) => {
+                            if(m[0].id == id) {
+                                setBet(m[0]);
+                                setLmsr(m[1]);
+                            }
+                        });
+                    }
+                });
+
+                toast({
+                    title: 'Bet Placed',
+                    description: "We've added your bet to the market.",
+                    status: 'success',
+                    duration: 9000,
+                    isClosable: true,
+                });
         }else{
             console.log("Account not available");
         }

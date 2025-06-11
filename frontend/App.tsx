@@ -41,7 +41,7 @@ function App() {
             <Homepage/>
               }
             />
-            <Route path="/portfolio/:address" element={<Portfolio/>} />
+            <Route path="/portfolio" element={<Portfolio/>} />
             <Route path="/bet/:id" element={<BetDetails />} /> 
             <Route path="/admin" element={<Admin/>} />
             <Route path="/rewards" element={<Rewards/>} />

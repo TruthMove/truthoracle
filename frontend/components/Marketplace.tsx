@@ -1,6 +1,6 @@
 import {useWallet} from "@aptos-labs/wallet-adapter-react";
-import {Grid, Tabs, TabList, Tab, TabPanels, TabPanel, Box} from "@chakra-ui/react";
-import {useEffect, useState} from "react";
+import {Grid, Tabs, TabList, Tab, TabPanels, TabPanel, Box, Spinner, Center} from "@chakra-ui/react";
+import {useEffect, useState, useCallback} from "react";
 import {getMarketCount, getMarketMetadata} from "../../blockend/aptosService";
 import BetCard from "./BetCard";
 
@@ -8,43 +8,54 @@ const Marketplace = () => {
     const {account} = useWallet();
     const [activeBets, setActiveBets] = useState<any[]>([]);
     const [expiredBets, setExpiredBets] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchBets = async () => {
-            setActiveBets([]); // Clear previous bets
-            setExpiredBets([]); // Clear previous expired bets
+    const fetchBets = useCallback(async () => {
+        setLoading(true);
+        setActiveBets([]); // Clear previous bets
+        setExpiredBets([]); // Clear previous expired bets
 
-            try {
-                const marketCount = await getMarketCount(); // Get the market count
-                const newActiveBets: any[] = []; // Array to collect active bets
-                const newExpiredBets: any[] = []; // Array to collect expired bets
+        try {
+            const marketCount = await getMarketCount(); // Get the market count
+            const newActiveBets: any[] = []; // Array to collect active bets
+            const newExpiredBets: any[] = []; // Array to collect expired bets
 
-                for (let i = 0; i < marketCount; i++) {
-                    const marketMetadata: any = await getMarketMetadata(i); // Fetch market metadata
-                    console.log("i", i);
+            for (let i = 0; i < marketCount; i++) {
+                const marketMetadata: any = await getMarketMetadata(i); // Fetch market metadata
+                console.log("i", i);
 
-                    if (marketMetadata.length > 0) {
-                        if (marketMetadata[0].status === 0) { // Active market
-                            if (i != 8 && i != 5) {
-                                newActiveBets.push(marketMetadata[0]);
-                            }
-                        } else if (marketMetadata[0].status === 1) { // Expired market
-                            newExpiredBets.push(marketMetadata[0]);
+                if (marketMetadata.length > 0) {
+                    if (marketMetadata[0].status === 0) { // Active market
+                        if (i != 8 && i != 5) {
+                            newActiveBets.push(marketMetadata[0]);
                         }
+                    } else if (marketMetadata[0].status === 1) { // Expired market
+                        newExpiredBets.push(marketMetadata[0]);
                     }
                 }
-
-                setActiveBets(newActiveBets); // Update state with active bets
-                setExpiredBets(newExpiredBets); // Update state with expired bets
-                console.log("Active Bets:", newActiveBets);
-                console.log("Expired Bets:", newExpiredBets);
-            } catch (error) {
-                console.error("Error fetching bets:", error);
             }
-        };
 
+            setActiveBets(newActiveBets); // Update state with active bets
+            setExpiredBets(newExpiredBets); // Update state with expired bets
+            console.log("Active Bets:", newActiveBets);
+            console.log("Expired Bets:", newExpiredBets);
+        } catch (error) {
+            console.error("Error fetching bets:", error);
+        }
+        setLoading(false);
+    }, []);
+
+    useEffect(() => {
         fetchBets();
-    }, [account]);
+    }, [fetchBets, account]);
+
+    // Expose the refresh function to the window object
+    useEffect(() => {
+        (window as any).refreshMarketplace = fetchBets;
+        return () => {
+            delete (window as any).refreshMarketplace;
+        };
+    }, [fetchBets]);
 
     return (
         <Box p={6} className="font-jbm">
@@ -55,6 +66,9 @@ const Marketplace = () => {
                 </TabList>
                 <TabPanels>
                     <TabPanel>
+                        {loading ? (
+                            <Center minH="200px"><Spinner size="xl" color="#CCCCFF" /></Center>
+                        ) : (
                         <Grid
                             templateColumns={{
                                 base: "repeat(2, 1fr)",
@@ -71,8 +85,12 @@ const Marketplace = () => {
                                 </div>
                             ))}
                         </Grid>
+                        )}
                     </TabPanel>
                     <TabPanel>
+                        {loading ? (
+                            <Center minH="200px"><Spinner size="xl" color="#CCCCFF" /></Center>
+                        ) : (
                         <Grid
                             templateColumns={{
                                 base: "repeat(2, 1fr)",
@@ -89,6 +107,7 @@ const Marketplace = () => {
                                 </div>
                             ))}
                         </Grid>
+                        )}
                     </TabPanel>
                 </TabPanels>
             </Tabs>

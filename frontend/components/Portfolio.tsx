@@ -1,10 +1,10 @@
 import {Center, Stack, TabList, TabPanel, TabPanels, Tabs} from '@chakra-ui/react'
-// import Summary from './Portfolio/Summary'
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import Activity from './Portfolio/Activity'
 
-type Props = {}
+function Portfolio() {
+  const { account } = useWallet();
 
-function Portfolio({}: Props) {
   return (
     <>
     <Stack minHeight={"100vh"} width={"100%"} px={10} color={"white"}>

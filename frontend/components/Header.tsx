@@ -80,7 +80,7 @@ export function Header() {
       </div>
       <div style={{ display: 'flex', justifyContent:"flex-end", width:"70%"}}>
         <Link to="/marketplace" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Marketplace</Link>
-        <Link to={`/portfolio/${account?.address}`}  style={{marginRight:"40px", zIndex:1}} className="font-jbm text-l">Portfolio</Link>
+        <Link to="/portfolio"  style={{marginRight:"40px", zIndex:1}} className="font-jbm text-l">Portfolio</Link>
         <Link to="/rewards" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Rewards</Link>
         <Link to="/faq" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>FAQ's</Link>
         <Link to="/admin" className="font-jbm text-l" style={{marginRight:"40px", zIndex:1}}>Create Market</Link>
